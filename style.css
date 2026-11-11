@@ -8,7 +8,7 @@
 
 body, html {
   width: 100%;
-  height: 100%;
+  min-height: 100%;
   overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background-color: #2b2d42;
@@ -19,11 +19,11 @@ body, html {
   display: flex;
   flex-direction: column;
   width: 100vw;
-  height: 100vh;
-  height: -webkit-fill-available;
+  min-height: 100vh;
+  height: 100dvh;
   justify-content: space-between;
   align-items: center;
-  padding: 16px;
+  padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
 }
 
 .game-header {
@@ -42,6 +42,7 @@ body, html {
 
 .game-area {
   flex: 1;
+  min-height: 0;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -59,8 +60,9 @@ body, html {
 }
 
 .block {
-  width: 70px;
-  height: 70px;
+  width: clamp(42px, 12vmin, 70px);
+  height: clamp(42px, 12vmin, 70px);
+  touch-action: none;
   background: #e07a5f;
   border-radius: 8px;
   display: flex;
@@ -80,8 +82,9 @@ body, html {
 }
 
 .target-box {
-  width: 320px;
-  height: 100px;
+  width: min(320px, 95%);
+  min-height: 65px;
+  height: min(100px, 20dvh);
   border: 3px dashed #f4a261;
   border-radius: 12px;
   display: flex;
@@ -98,7 +101,7 @@ body, html {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 20px;
+  padding: 8px 12px;
   background: rgba(0, 0, 0, 0.2);
   border-radius: 8px;
 }
@@ -116,4 +119,18 @@ body, html {
   border-radius: 20px;
   font-weight: bold;
   cursor: pointer;
+}
+
+/* Keep the same functional puzzle usable in either device orientation. */
+@media (orientation: landscape) {
+  #app-container { padding-top: max(4px, env(safe-area-inset-top)); padding-bottom: max(4px, env(safe-area-inset-bottom)); }
+  .game-area { flex-direction: row; gap: 12px; }
+  .blocks-container { max-width: min(46vw, 360px); }
+  .target-box { width: min(40vw, 320px); height: min(45dvh, 150px); }
+  .game-header h1 { font-size: 1rem; }
+}
+@media (max-height: 430px) {
+  .game-header .subtitle { font-size: .7rem; }
+  .game-area { gap: 8px; }
+  .block { width: clamp(36px, 10vmin, 60px); height: clamp(36px, 10vmin, 60px); }
 }

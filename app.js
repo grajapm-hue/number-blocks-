@@ -50,6 +50,7 @@ function addDragHandlers(block) {
 
   function onMove(e) {
     if (!isDragging) return;
+    if (e.cancelable) e.preventDefault();
     const touch = e.touches ? e.touches[0] : e;
     currentX = touch.clientX - startX;
     currentY = touch.clientY - startY;
@@ -90,7 +91,7 @@ function addDragHandlers(block) {
   window.addEventListener('mouseup', onEnd);
 
   block.addEventListener('touchstart', onStart, { passive: true });
-  window.addEventListener('touchmove', onMove, { passive: true });
+  window.addEventListener('touchmove', onMove, { passive: false });
   window.addEventListener('touchend', onEnd);
 }
 
