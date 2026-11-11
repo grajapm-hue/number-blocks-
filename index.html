@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Orientation & Slide Check</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+</head>
+<body>
+  <div id="app-container">
+    <header class="game-header">
+      <h1>🧩 Orientation & Slide Check</h1>
+      <p class="subtitle">Slide all 8 blocks into the target box!</p>
+    </header>
+
+    <div class="game-area">
+      <div class="blocks-container" id="blocks-container">
+        <!-- 8 Blocks generated via JS -->
+      </div>
+      <div class="target-box" id="target-box">
+        <span>Target Zone (<span id="joined-count">0</span>/8)</span>
+      </div>
+    </div>
+
+    <footer class="game-footer">
+      <div class="score-board">Status: <span id="status-text">Dragging...</span></div>
+      <button id="reset-btn">Reset Puzzle</button>
+    </footer>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
