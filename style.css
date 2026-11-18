@@ -9,7 +9,8 @@
 body, html {
   width: 100%;
   min-height: 100%;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background-color: #2b2d42;
   color: #fff;
@@ -48,7 +49,7 @@ body, html {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 20px;
+  gap: 10px;
 }
 
 .blocks-container {
@@ -88,6 +89,9 @@ body, html {
   border: 3px dashed #f4a261;
   border-radius: 12px;
   display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px;
   align-items: center;
   justify-content: center;
   background: rgba(244, 162, 97, 0.1);
@@ -106,6 +110,12 @@ body, html {
   border-radius: 8px;
 }
 
+.footer-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
 .score-board {
   font-size: 0.9rem;
 }
@@ -121,7 +131,97 @@ body, html {
   cursor: pointer;
 }
 
-/* Keep the same functional puzzle usable in either device orientation. */
+#tvCastBtn {
+  background: #2a9d8f;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  font-size: 0.9rem;
+  border-radius: 20px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* Smart TV Modal & Viewer Mode */
+#tvModal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.tv-modal-box {
+  background: #2b2d42;
+  border: 2px solid #f4a261;
+  color: #fff;
+  padding: 24px;
+  border-radius: 18px;
+  text-align: center;
+  max-width: 340px;
+  width: 90%;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+}
+
+.tv-modal-box p {
+  font-size: 0.9rem;
+  color: #e2e8f0;
+  margin-top: 8px;
+}
+
+.tv-code-badge {
+  font-size: 2.4rem;
+  font-weight: 800;
+  letter-spacing: 6px;
+  background: #1d1e2c;
+  padding: 12px 20px;
+  border-radius: 12px;
+  margin: 14px 0;
+  color: #f4a261;
+}
+
+#tvStatusText {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+#closeTvModal {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 20px;
+  background: #e76f51;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+body.tv-viewer-mode .footer-actions {
+  display: none !important;
+}
+
+#tvInteractionBlocker {
+  position: fixed;
+  inset: 0;
+  z-index: 9990;
+  background: transparent;
+}
+
+#tvViewerBanner {
+  position: fixed;
+  bottom: 14px;
+  right: 18px;
+  background: rgba(0, 0, 0, 0.75);
+  color: #f4a261;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  z-index: 9995;
+  transition: opacity 0.4s ease;
+}
+
 @media (orientation: landscape) {
   #app-container { padding-top: max(4px, env(safe-area-inset-top)); padding-bottom: max(4px, env(safe-area-inset-bottom)); }
   .game-area { flex-direction: row; gap: 12px; }

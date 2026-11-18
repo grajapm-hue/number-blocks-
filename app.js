@@ -8,15 +8,10 @@ let blocks = [];
 const totalBlocks = 8;
 
 function initPuzzle() {
-  // Clear both containers completely
   container.innerHTML = '';
-  
-  // Reset target box text wrapper
   targetBox.innerHTML = '<span>Target Zone (<span id="joined-count">0</span>/8)</span>';
-  
   blocks = [];
   
-  // Re-create the 8 blocks cleanly
   for (let i = 1; i <= totalBlocks; i++) {
     const block = document.createElement('div');
     block.className = 'block';
@@ -31,6 +26,7 @@ function initPuzzle() {
   
   updateCount();
   statusText.textContent = "Slide blocks to target!";
+  broadcastState();
 }
 
 function addDragHandlers(block) {
@@ -55,6 +51,13 @@ function addDragHandlers(block) {
     currentX = touch.clientX - startX;
     currentY = touch.clientY - startY;
     block.style.transform = `translate(${currentX}px, ${currentY}px)`;
+    
+    // Stream live drag coordinates to TV
+    broadcastState({
+      draggingId: Number(block.dataset.id),
+      dx: currentX,
+      dy: currentY
+    });
   }
 
   function onEnd() {
@@ -84,6 +87,8 @@ function addDragHandlers(block) {
       currentY = 0;
       block.style.transform = 'translate(0, 0)';
     }
+
+    broadcastState();
   }
 
   block.addEventListener('mousedown', onStart);
@@ -106,6 +111,60 @@ function updateCount() {
     statusText.textContent = `${totalBlocks - joinedCount} blocks remaining`;
   }
 }
+
+// ==========================================
+// TV MIRROR SYNC HOOKS
+// ==========================================
+function broadcastState(activeDrag = null) {
+  if (typeof window.syncGameToTV === 'function') {
+    const joinedIds = blocks
+      .filter(b => b.dataset.joined === 'true')
+      .map(b => Number(b.dataset.id));
+
+    window.syncGameToTV({
+      joinedIds,
+      activeDrag,
+      statusMessage: statusText.textContent
+    });
+  }
+}
+
+window.renderTVState = function (state) {
+  if (!state) return;
+
+  blocks.forEach(block => {
+    const id = Number(block.dataset.id);
+    const shouldBeJoined = state.joinedIds.includes(id);
+
+    if (shouldBeJoined && block.dataset.joined !== 'true') {
+      block.dataset.joined = 'true';
+      block.classList.add('joined');
+      block.style.transform = 'translate(0, 0)';
+      targetBox.appendChild(block);
+    } else if (!shouldBeJoined && block.dataset.joined === 'true') {
+      block.dataset.joined = 'false';
+      block.classList.remove('joined');
+      block.style.transform = 'translate(0, 0)';
+      container.appendChild(block);
+    }
+
+    // Mirror active finger drag in real time on the TV
+    if (state.activeDrag && state.activeDrag.draggingId === id && !shouldBeJoined) {
+      block.style.zIndex = '100';
+      block.style.transition = 'none';
+      block.style.transform = `translate(${state.activeDrag.dx}px, ${state.activeDrag.dy}px)`;
+    } else {
+      block.style.zIndex = '1';
+      block.style.transition = 'transform 0.2s ease';
+      block.style.transform = 'translate(0, 0)';
+    }
+  });
+
+  updateCount();
+  if (state.statusMessage) {
+    statusText.textContent = state.statusMessage;
+  }
+};
 
 resetBtn.addEventListener('click', initPuzzle);
 

@@ -1,9 +1,11 @@
-const CACHE_NAME = 'hedgehog-maze-v2';
+const CACHE_NAME = 'hedgehog-maze-v3';
 const ASSETS = [
   './',
   './index.html',
+  './tv.html',
   './style.css',
   './app.js',
+  './tv-sync.js',
   './manifest.json',
   './icons/icon-192.png',
   './icons/icon-512.png',
