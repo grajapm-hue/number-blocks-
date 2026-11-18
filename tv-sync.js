@@ -31,7 +31,7 @@
 
     castBtn.addEventListener('click', () => {
       modal.style.display = 'flex';
-      if (!peer) {
+      if (!peer || peer.destroyed) {
         startHostSession(codeDisplay, statusText);
       }
     });
@@ -46,9 +46,22 @@
     const fullPeerId = PEER_PREFIX + shortCode;
 
     codeDisplay.textContent = shortCode;
-    statusText.textContent = 'Waiting for TV to connect...';
+    statusText.textContent = 'Connecting to signaling server...';
+    statusText.style.color = '#f4a261';
 
-    peer = new Peer(fullPeerId, { debug: 1 });
+    // Explicitly configure secure connection for HTTPS (GitHub Pages)
+    peer = new Peer(fullPeerId, {
+      secure: true,
+      host: '0.peerjs.com',
+      port: 443,
+      debug: 2
+    });
+
+    peer.on('open', (id) => {
+      console.log('PeerJS Host ready with ID:', id);
+      statusText.textContent = 'Waiting for TV to connect...';
+      statusText.style.color = '#e76f51';
+    });
 
     peer.on('connection', (conn) => {
       activeConn = conn;
@@ -70,7 +83,12 @@
 
     peer.on('error', (err) => {
       console.error('PeerJS Host Error:', err);
-      statusText.textContent = 'Connection error. Reload to retry.';
+      if (err.type === 'unavailable-id') {
+        statusText.textContent = 'Code collision. Re-open modal to retry.';
+      } else {
+        statusText.textContent = `Error: ${err.type}. Check network/HTTPS.`;
+      }
+      statusText.style.color = '#e76f51';
     });
   }
 
@@ -94,14 +112,23 @@
     banner.textContent = `Connecting to Room ${shortCode}...`;
     document.body.appendChild(banner);
 
-    peer = new Peer();
+    // Explicitly configure secure connection for TV viewer as well
+    peer = new Peer({
+      secure: true,
+      host: '0.peerjs.com',
+      port: 443,
+      debug: 2
+    });
 
     peer.on('open', () => {
-      const conn = peer.connect(PEER_PREFIX + shortCode.trim());
+      const targetId = PEER_PREFIX + shortCode.trim();
+      console.log('Connecting to host:', targetId);
+      const conn = peer.connect(targetId, { reliable: true });
 
       conn.on('open', () => {
         banner.textContent = `Live TV Mirror • Room ${shortCode}`;
-        setTimeout(() => { banner.style.opacity = '0.35'; }, 3000);
+        banner.style.background = '#2a9d8f';
+        setTimeout(() => { banner.style.opacity = '0.35'; }, 4000);
       });
 
       conn.on('data', (data) => {
@@ -112,12 +139,15 @@
 
       conn.on('close', () => {
         banner.style.opacity = '1';
+        banner.style.background = '#e76f51';
         banner.textContent = 'Disconnected from controller.';
       });
     });
 
-    peer.on('error', () => {
-      banner.textContent = 'Could not find room. Check the 4-digit code.';
+    peer.on('error', (err) => {
+      console.error('PeerJS Viewer Error:', err);
+      banner.style.background = '#e76f51';
+      banner.textContent = `Connection failed (${err.type}). Check TV browser.`;
     });
   }
 })();
