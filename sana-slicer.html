@@ -1,0 +1,1870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <title>SaNa Slicer Pro++ (Unified SVG &amp; Assembly)</title>
+  <style>
+    /* =====================================================================
+       1. BASE RESET & GRADIENT OUTER FRAME (100% SELF-CONTAINED OFFLINE CSS)
+       ===================================================================== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      min-height: 100vh;
+      width: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 52%, #3b82f6 100%);
+      color: #0f172a;
+      line-height: 1.4;
+      overflow-x: hidden;
+    }
+
+    /* Outer Gradient Padding Shell */
+    .app-shell {
+      width: 100%;
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    @media (min-width: 768px) {
+      .app-shell {
+        padding: 18px;
+        gap: 16px;
+      }
+    }
+
+    /* Crisp White Rounded Card */
+    .card {
+      background: #ffffff;
+      border-radius: 20px;
+      border: 1.5px solid #e2e8f0;
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.14);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    @media (min-width: 768px) {
+      .card {
+        padding: 18px;
+        border-radius: 22px;
+      }
+    }
+
+    /* =====================================================================
+       2. HEADER & ACTION PILL BUTTONS
+       ===================================================================== */
+    .app-header {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .app-title {
+      font-size: clamp(1.12rem, 3.8vw, 1.55rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(90deg, #db2777 0%, #7c3aed 55%, #2563eb 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .pill-btn {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 15px;
+      border-radius: 9999px;
+      border: none;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #ffffff;
+      cursor: pointer;
+      user-select: none;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.14);
+      transition: transform 0.14s ease, box-shadow 0.14s ease, filter 0.14s ease;
+      overflow: hidden;
+      min-height: 40px;
+    }
+
+    .pill-btn:hover {
+      filter: brightness(1.05);
+      transform: translateY(-1px);
+    }
+
+    .pill-btn:active {
+      transform: scale(0.97);
+    }
+
+    /* Button Color Variants */
+    .btn-orange {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    }
+
+    .btn-blue {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    }
+
+    .btn-red {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    }
+
+    .btn-slate-red {
+      background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+    }
+
+    .btn-purple {
+      background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    }
+
+    .btn-emerald {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+
+    .btn-indigo {
+      background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+    }
+
+    /* Native File Input Overlay Inside Upload Pill for 100% Mobile + Desktop Reliability */
+    .upload-label {
+      cursor: pointer;
+    }
+
+    .upload-label input[type="file"] {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.001;
+      cursor: pointer;
+      z-index: 3;
+    }
+
+    .upload-label span {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    /* Fallback native file bar if a sandboxed iframe blocks label-wrapped file pickers */
+    .direct-picker-row {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 6px 10px;
+      border-radius: 12px;
+      background: #fffbeb;
+      border: 1px dashed #f59e0b;
+      font-size: 0.78rem;
+      color: #92400e;
+    }
+
+    .direct-picker-row.show {
+      display: flex;
+    }
+
+    /* Checkbox Option Pills */
+    .check-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 14px;
+      border-radius: 9999px;
+      background: #f8fafc;
+      border: 1.5px solid #cbd5e1;
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: #1e293b;
+      cursor: pointer;
+      user-select: none;
+      min-height: 38px;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+
+    .check-pill:hover {
+      border-color: #8b5cf6;
+      background: #f5f3ff;
+    }
+
+    .check-pill input[type="checkbox"] {
+      width: 17px;
+      height: 17px;
+      accent-color: #10b981;
+      cursor: pointer;
+    }
+
+    /* =====================================================================
+       3. MULTI-IMAGE THUMBNAIL STRIP (HIDDEN WHEN BLANK)
+       ===================================================================== */
+    .thumb-bar-wrap {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding-bottom: 4px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .thumb-strip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      overflow-x: auto;
+      padding: 4px 2px;
+      flex: 1;
+    }
+
+    .thumb-item {
+      position: relative;
+      width: 66px;
+      height: 66px;
+      flex-shrink: 0;
+      border-radius: 14px;
+      border: 2px solid #cbd5e1;
+      background: #f8fafc;
+      cursor: pointer;
+      overflow: visible;
+      transition: transform 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease;
+    }
+
+    .thumb-item.active {
+      border-color: #8b5cf6;
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.24);
+      transform: translateY(-1px);
+    }
+
+    .thumb-img-box {
+      width: 100%;
+      height: 100%;
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #ffffff;
+    }
+
+    .thumb-img-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .thumb-index {
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 5px;
+      border-radius: 9999px;
+      background: #7c3aed;
+      color: #ffffff;
+      font-size: 0.72rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.22);
+      pointer-events: none;
+    }
+
+    .thumb-del {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      width: 22px;
+      height: 22px;
+      border-radius: 9999px;
+      border: 2px solid #ffffff;
+      background: #ef4444;
+      color: #ffffff;
+      font-size: 0.8rem;
+      font-weight: 900;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(239, 68, 68, 0.45);
+      z-index: 5;
+    }
+
+    .thumb-del:hover {
+      background: #dc2626;
+      transform: scale(1.08);
+    }
+
+    /* =====================================================================
+       4. ZOOM (- / +) & SLICING TABLE TOOLBAR
+       ===================================================================== */
+    .table-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 8px 10px;
+    }
+
+    .zoom-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .mini-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 6px 11px;
+      min-height: 34px;
+      min-width: 36px;
+      border-radius: 10px;
+      border: 1.5px solid #cbd5e1;
+      background: #ffffff;
+      color: #1e293b;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.12s ease, border-color 0.12s ease;
+    }
+
+    .mini-btn:hover {
+      background: #f1f5f9;
+      border-color: #94a3b8;
+    }
+
+    .mini-btn:active {
+      transform: scale(0.96);
+    }
+
+    .mini-btn-primary {
+      background: #2563eb;
+      border-color: #2563eb;
+      color: #ffffff;
+    }
+
+    .mini-btn-primary:hover {
+      background: #1d4ed8;
+      border-color: #1d4ed8;
+    }
+
+    .mini-btn-danger {
+      background: #fef2f2;
+      border-color: #fecaca;
+      color: #dc2626;
+    }
+
+    .mini-btn-danger:hover {
+      background: #fee2e2;
+      border-color: #fca5a5;
+    }
+
+    .zoom-readout {
+      min-width: 54px;
+      text-align: center;
+      padding: 5px 8px;
+      border-radius: 9px;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: #334155;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .dim-readout {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #475569;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* =====================================================================
+       5. SLICING TABLE VIEWPORT & BLANK DROPZONE
+       ===================================================================== */
+    .table-viewport {
+      position: relative;
+      width: 100%;
+      min-height: 320px;
+      height: 54vh;
+      max-height: 600px;
+      border-radius: 16px;
+      border: 2px dashed #cbd5e1;
+      background-color: #ffffff;
+      overflow: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.15s ease, background-color 0.15s ease;
+    }
+
+    .table-viewport.drag-over {
+      border-color: #8b5cf6;
+      background-color: #f5f3ff;
+    }
+
+    .table-viewport.has-image {
+      border-style: solid;
+      border-color: #e2e8f0;
+      background-image:
+        linear-gradient(45deg, #f8fafc 25%, transparent 25%),
+        linear-gradient(-45deg, #f8fafc 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #f8fafc 75%),
+        linear-gradient(-45deg, transparent 75%, #f8fafc 75%);
+      background-size: 20px 20px;
+      background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+    }
+
+    .empty-dropzone {
+      width: 100%;
+      height: 100%;
+      min-height: 300px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px;
+      cursor: pointer;
+      gap: 8px;
+      color: #475569;
+    }
+
+    .empty-icon {
+      font-size: 2.6rem;
+      line-height: 1;
+    }
+
+    .empty-title {
+      font-size: 1rem;
+      font-weight: 800;
+      color: #1e293b;
+    }
+
+    .empty-sub {
+      font-size: 0.82rem;
+      color: #64748b;
+      max-width: 340px;
+    }
+
+    .canvas-stage {
+      display: none;
+      position: relative;
+      margin: auto;
+      padding: 12px;
+      line-height: 0;
+    }
+
+    #slicingCanvas {
+      display: block;
+      border-radius: 6px;
+      box-shadow: 0 4px 18px rgba(15, 23, 42, 0.12);
+      cursor: crosshair;
+      touch-action: none;
+    }
+
+    .helper-hint {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #475569;
+    }
+
+    /* =====================================================================
+       6. STORE SLICED PARTS TRAY & INSPECT MODAL
+       ===================================================================== */
+    .store-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .store-title {
+      font-size: 1rem;
+      font-weight: 800;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .store-sub {
+      font-size: 0.78rem;
+      color: #64748b;
+    }
+
+    .parts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(136px, 1fr));
+      gap: 10px;
+    }
+
+    .parts-empty {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 16px;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 1px dashed #cbd5e1;
+      font-size: 0.82rem;
+      color: #64748b;
+    }
+
+    .part-card {
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: border-color 0.14s ease, transform 0.14s ease;
+    }
+
+    .part-card:hover {
+      border-color: #8b5cf6;
+      transform: translateY(-1px);
+    }
+
+    .part-preview {
+      width: 100%;
+      height: 92px;
+      border-radius: 10px;
+      background-color: #ffffff;
+      background-image:
+        linear-gradient(45deg, #f1f5f9 25%, transparent 25%),
+        linear-gradient(-45deg, #f1f5f9 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #f1f5f9 75%),
+        linear-gradient(-45deg, transparent 75%, #f1f5f9 75%);
+      background-size: 14px 14px;
+      background-position: 0 0, 0 7px, 7px -7px, -7px 0;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      cursor: pointer;
+      padding: 4px;
+    }
+
+    .part-preview img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .part-name {
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: #1e293b;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .part-meta {
+      font-size: 0.7rem;
+      color: #64748b;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .part-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .part-btn {
+      flex: 1;
+      padding: 5px 6px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #1e293b;
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .part-btn:hover {
+      background: #f1f5f9;
+    }
+
+    .part-btn-del {
+      color: #dc2626;
+      border-color: #fecaca;
+      background: #fef2f2;
+      flex: 0 0 auto;
+      padding: 5px 8px;
+    }
+
+    /* Toast Notification Banner */
+    .toast {
+      position: fixed;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #0f172a;
+      color: #ffffff;
+      padding: 10px 18px;
+      border-radius: 9999px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.3);
+      z-index: 9999;
+      opacity: 0;
+      transition: transform 0.22s ease, opacity 0.22s ease;
+      max-width: 92vw;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* Inspect Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.65);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 9000;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-card {
+      background: #ffffff;
+      border-radius: 20px;
+      max-width: 440px;
+      width: 100%;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 20px 45px rgba(15, 23, 42, 0.35);
+    }
+
+    .modal-preview-box {
+      width: 100%;
+      height: 220px;
+      border-radius: 14px;
+      border: 1px solid #e2e8f0;
+      background-image:
+        linear-gradient(45deg, #f1f5f9 25%, transparent 25%),
+        linear-gradient(-45deg, #f1f5f9 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #f1f5f9 75%),
+        linear-gradient(-45deg, transparent 75%, #f1f5f9 75%);
+      background-size: 16px 16px;
+      background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+    }
+
+    .modal-preview-box img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+  </style>
+</head>
+<body>
+  <!-- SaNa navigation: independent of slicer application controls -->
+  <nav aria-label="Game navigation" style="position:relative;z-index:9999;display:flex;justify-content:center;align-items:center;gap:14px;flex-wrap:wrap;padding:10px 12px;background:#eef2ff;color:#1e293b;font:600 14px system-ui,sans-serif">
+    <a href="index.html" style="color:#1d4ed8;text-decoration:underline">← Number Blocks</a>
+    <span aria-current="page">SaNa Slicer Pro++</span>
+  </nav>
+
+  <main class="app-shell">
+    <!-- ===================================================================
+         CARD 1: HEADER, UPLOAD, POLYGON ACTIONS & COMBINED/FOLDER EXPORTS
+         =================================================================== -->
+    <section class="card">
+      <header class="app-header">
+        <h1 class="app-title">🤖 SaNa Slicer Pro++ (Unified SVG &amp; Assembly)</h1>
+      </header>
+
+      <!-- Row 1: Upload, Undo Dot, Accept Slice, Clear Images -->
+      <div class="pill-row">
+        <label id="uploadLabelBtn" for="fileInput" class="pill-btn btn-orange upload-label" title="Open internal folder or gallery to upload images">
+          <span>📂 Upload</span>
+          <input type="file" id="fileInput" accept="image/*,.png,.jpg,.jpeg,.webp,.gif,.svg" multiple />
+        </label>
+
+        <button type="button" id="btnUndoDot" class="pill-btn btn-blue" title="Remove the last placed dot">
+          <span>↩️ Undo Dot</span>
+        </button>
+
+        <button type="button" id="btnAcceptSlice" class="pill-btn btn-red" title="Cut and store the selected polygon slice">
+          <span>✂️ Accept Slice</span>
+        </button>
+
+        <button type="button" id="btnClearImages" class="pill-btn btn-slate-red" title="Clear all uploaded images and reset table">
+          <span>🗑️ Clear Images</span>
+        </button>
+      </div>
+
+      <!-- Row 2: Strip White BG & Unified 256x256 SVG Options -->
+      <div class="pill-row">
+        <label class="check-pill" title="Automatically make white background pixels transparent">
+          <input type="checkbox" id="chkStripWhite" checked />
+          <span>Strip White BG</span>
+        </label>
+
+        <label class="check-pill" title="Normalize exported SVG parts into a unified 256×256 viewBox">
+          <input type="checkbox" id="chkUnified256" checked />
+          <span>Unified 256×256 SVG</span>
+        </label>
+      </div>
+
+      <!-- Row 3: Combined SVG, JSON Manifest, and One-Destination Folder Export -->
+      <div class="pill-row">
+        <button type="button" id="btnDownloadCombinedSvg" class="pill-btn btn-purple" title="Download single SVG containing both sliced parts and assembly">
+          <span>📥 Download Combined SVG</span>
+        </button>
+
+        <button type="button" id="btnExportJson" class="pill-btn btn-emerald" title="Download assembly manifest JSON">
+          <span>📥 Export JSON</span>
+        </button>
+
+        <button type="button" id="btnSaveOneFolder" class="pill-btn btn-indigo" title="Save Combined SVG, JSON, and all sliced SVGs into one destination folder">
+          <span>📁 Save All to One Folder</span>
+        </button>
+      </div>
+
+      <!-- Direct Fallback File Picker (Shown automatically if sandbox/frame needs direct picker) -->
+      <div class="direct-picker-row" id="directPickerRow">
+        <span>Folder picker blocked in frame?</span>
+        <input type="file" id="directFileInput" accept="image/*,.png,.jpg,.jpeg,.webp,.gif,.svg" multiple style="max-width:210px;font-size:0.75rem;" />
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         CARD 2: THUMBNAIL STRIP, ZOOM (-/+) FIT BAR & SLICING TABLE
+         =================================================================== -->
+    <section class="card">
+      <!-- Multi-Image Switcher (Hidden when blank) -->
+      <div class="thumb-bar-wrap" id="thumbBarWrap">
+        <div class="thumb-strip" id="thumbStrip"></div>
+        <button type="button" id="btnClearAllThumb" class="mini-btn mini-btn-danger" title="Remove all uploaded images">
+          🗑️ Clear All
+        </button>
+      </div>
+
+      <!-- Zoom (- / +) & Fit Table Toolbar -->
+      <div class="table-toolbar">
+        <div class="zoom-group">
+          <button type="button" id="btnZoomOut" class="mini-btn" title="Zoom Out (-)">➖</button>
+          <span class="zoom-readout" id="zoomReadout">100%</span>
+          <button type="button" id="btnZoomIn" class="mini-btn" title="Zoom In (+)">➕</button>
+          <button type="button" id="btnFitTable" class="mini-btn mini-btn-primary" title="Fit image to slicing table">📐 Fit Table</button>
+          <button type="button" id="btnZoom100" class="mini-btn" title="Reset zoom to 1:1">1:1</button>
+        </div>
+
+        <div class="zoom-group">
+          <span class="dim-readout" id="dimReadout">Blank Table</span>
+          <button type="button" id="btnClearDots" class="mini-btn mini-btn-danger" title="Clear current cut dots">🗑️ Clear Dots</button>
+        </div>
+      </div>
+
+      <!-- Slicing Table Viewport (100% Blank Dropzone by Default) -->
+      <div class="table-viewport" id="tableViewport">
+        <div class="empty-dropzone" id="emptyDropzone" role="button" tabindex="0" title="Click to open internal folder and select images">
+          <div class="empty-icon">🖼️</div>
+          <div class="empty-title">Tap Upload or drop images here to start slicing</div>
+          <div class="empty-sub">Supports PNG, JPG, WEBP, SVG &amp; GIF • Large images automatically shrink to fit the table</div>
+        </div>
+
+        <div class="canvas-stage" id="canvasStage">
+          <canvas id="slicingCanvas"></canvas>
+        </div>
+      </div>
+
+      <p class="helper-hint" id="helperHint" style="display:none;">
+        Tap or click around a part to place green/red cut dots, then tap <strong>✂️ Accept Slice</strong> (or tap the green start dot to close).
+      </p>
+    </section>
+
+    <!-- ===================================================================
+         CARD 3: STORE SLICED PARTS TRAY
+         =================================================================== -->
+    <section class="card">
+      <div class="store-header">
+        <div>
+          <div class="store-title" id="storeTitle">📦 Store Sliced Parts (0)</div>
+          <div class="store-sub">Exports as part-01.svg, part-02.svg • Tap any part to inspect</div>
+        </div>
+        <button type="button" id="btnClearParts" class="mini-btn mini-btn-danger" style="display:none;">
+          🗑️ Clear Parts
+        </button>
+      </div>
+
+      <div class="parts-grid" id="partsGrid">
+        <div class="parts-empty">No sliced parts yet. Upload an image, trace dots around a part, and tap <strong>✂️ Accept Slice</strong>.</div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Toast Message Banner -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Part Inspection Modal -->
+  <div class="modal-backdrop" id="inspectModal">
+    <div class="modal-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <strong id="modalTitle" style="font-size:1rem;color:#0f172a;">part-01.svg</strong>
+        <button type="button" id="btnCloseModal" class="mini-btn">✕ Close</button>
+      </div>
+      <div class="modal-preview-box">
+        <img id="modalImg" alt="Sliced part preview" />
+      </div>
+      <div id="modalMeta" style="font-size:0.8rem;color:#475569;"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button type="button" id="btnModalDownload" class="pill-btn btn-purple" style="padding:8px 14px;font-size:0.82rem;">
+          📥 Download SVG
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* =====================================================================
+       1. APPLICATION STATE (100% BLANK INITIALIZATION)
+       ===================================================================== */
+    const state = {
+      images: [],        // Array of { id, name, dataUrl, img, width, height, dots: [], zoom: 1, fitMode: true }
+      activeIdx: 0,
+      parts: [],         // Array of { id, filename, svgContent, svgDataUrl, pngDataUrl, x, y, width, height, polygon, sourceName, sourceW, sourceH }
+      stripWhiteBg: true,
+      unified256: true,
+      dragDotIdx: -1,
+      inspectedPart: null
+    };
+
+    const el = {
+      uploadLabelBtn: document.getElementById('uploadLabelBtn'),
+      fileInput: document.getElementById('fileInput'),
+      directPickerRow: document.getElementById('directPickerRow'),
+      directFileInput: document.getElementById('directFileInput'),
+      btnUndoDot: document.getElementById('btnUndoDot'),
+      btnAcceptSlice: document.getElementById('btnAcceptSlice'),
+      btnClearImages: document.getElementById('btnClearImages'),
+      btnClearAllThumb: document.getElementById('btnClearAllThumb'),
+      chkStripWhite: document.getElementById('chkStripWhite'),
+      chkUnified256: document.getElementById('chkUnified256'),
+      btnDownloadCombinedSvg: document.getElementById('btnDownloadCombinedSvg'),
+      btnExportJson: document.getElementById('btnExportJson'),
+      btnSaveOneFolder: document.getElementById('btnSaveOneFolder'),
+      thumbBarWrap: document.getElementById('thumbBarWrap'),
+      thumbStrip: document.getElementById('thumbStrip'),
+      btnZoomOut: document.getElementById('btnZoomOut'),
+      btnZoomIn: document.getElementById('btnZoomIn'),
+      btnFitTable: document.getElementById('btnFitTable'),
+      btnZoom100: document.getElementById('btnZoom100'),
+      btnClearDots: document.getElementById('btnClearDots'),
+      zoomReadout: document.getElementById('zoomReadout'),
+      dimReadout: document.getElementById('dimReadout'),
+      tableViewport: document.getElementById('tableViewport'),
+      emptyDropzone: document.getElementById('emptyDropzone'),
+      canvasStage: document.getElementById('canvasStage'),
+      canvas: document.getElementById('slicingCanvas'),
+      helperHint: document.getElementById('helperHint'),
+      storeTitle: document.getElementById('storeTitle'),
+      btnClearParts: document.getElementById('btnClearParts'),
+      partsGrid: document.getElementById('partsGrid'),
+      toast: document.getElementById('toast'),
+      inspectModal: document.getElementById('inspectModal'),
+      modalTitle: document.getElementById('modalTitle'),
+      modalImg: document.getElementById('modalImg'),
+      modalMeta: document.getElementById('modalMeta'),
+      btnCloseModal: document.getElementById('btnCloseModal'),
+      btnModalDownload: document.getElementById('btnModalDownload')
+    };
+
+    const ctx = el.canvas.getContext('2d');
+    let toastTimer = null;
+
+    function showToast(msg) {
+      el.toast.textContent = msg;
+      el.toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        el.toast.classList.remove('show');
+      }, 2800);
+    }
+
+    function getActiveImage() {
+      if (!state.images.length) return null;
+      if (state.activeIdx < 0 || state.activeIdx >= state.images.length) {
+        state.activeIdx = 0;
+      }
+      return state.images[state.activeIdx];
+    }
+
+    /* =====================================================================
+       2. IMAGE UPLOAD, AUTO-FIT TO TABLE & CLEAR HANDLERS
+       ===================================================================== */
+    function computeFitZoom(imgW, imgH) {
+      const rect = el.tableViewport.getBoundingClientRect();
+      const availW = Math.max(220, (rect.width || window.innerWidth - 48) - 32);
+      const availH = Math.max(220, (rect.height || 360) - 32);
+      const scale = Math.min(availW / imgW, availH / imgH, 1.5);
+      return Math.max(0.05, Number(scale.toFixed(4)));
+    }
+
+    function openInternalFolderPicker() {
+      // Allow native file input overlay to handle direct tap first; if triggered programmatically
+      // from empty dropzone or keyboard, call showPicker() or click() with safe fallback.
+      try {
+        if (typeof el.fileInput.showPicker === 'function') {
+          el.fileInput.showPicker();
+          return;
+        }
+      } catch (_) {}
+
+      try {
+        el.fileInput.click();
+      } catch (_) {
+        el.directPickerRow.classList.add('show');
+      }
+    }
+
+    function loadFiles(fileList) {
+      const files = Array.from(fileList || []).filter(f => {
+        if (!f) return false;
+        if (f.type && f.type.startsWith('image/')) return true;
+        return /\.(png|jpe?g|webp|gif|svg|bmp|avif)$/i.test(f.name || '');
+      });
+
+      if (!files.length) {
+        showToast('Please select a valid image file (PNG, JPG, WEBP, SVG, GIF).');
+        return;
+      }
+
+      let loadedCount = 0;
+      files.forEach((file) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const dataUrl = ev.target.result;
+          const img = new Image();
+          img.onload = () => {
+            const natW = img.naturalWidth || img.width || 512;
+            const natH = img.naturalHeight || img.height || 512;
+            const fitZoom = computeFitZoom(natW, natH);
+
+            state.images.push({
+              id: 'img-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+              name: file.name || ('image-' + (state.images.length + 1) + '.png'),
+              dataUrl,
+              img,
+              width: natW,
+              height: natH,
+              dots: [],
+              zoom: fitZoom,
+              fitMode: true
+            });
+
+            loadedCount++;
+            if (loadedCount === files.length) {
+              state.activeIdx = state.images.length - 1;
+              renderAll();
+              showToast(`Loaded ${files.length} image${files.length > 1 ? 's' : ''} (auto-fitted to table)`);
+            }
+          };
+          img.onerror = () => {
+            showToast(`Could not decode ${file.name}`);
+          };
+          img.src = dataUrl;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function handleFileInputChange(e) {
+      if (e.target.files && e.target.files.length) {
+        loadFiles(e.target.files);
+        e.target.value = '';
+      }
+    }
+
+    el.fileInput.addEventListener('change', handleFileInputChange);
+    el.directFileInput.addEventListener('change', handleFileInputChange);
+
+    // Ensure tapping Upload pill always triggers picker even if overlay is bypassed on some devices
+    el.uploadLabelBtn.addEventListener('click', (e) => {
+      if (e.target === el.fileInput) return;
+      // Let standard label-to-input association fire natively; if nothing opens within 350ms
+      // (e.g. inside restricted sandbox/webview), reveal direct picker bar.
+      setTimeout(() => {
+        if (!document.hasFocus()) return;
+        el.directPickerRow.classList.add('show');
+      }, 450);
+    });
+
+    // Clicking empty slicing table dropzone opens internal folder picker
+    el.emptyDropzone.addEventListener('click', (e) => {
+      e.preventDefault();
+      openInternalFolderPicker();
+    });
+
+    el.emptyDropzone.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openInternalFolderPicker();
+      }
+    });
+
+    // Drag & Drop onto Slicing Table
+    el.tableViewport.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      el.tableViewport.classList.add('drag-over');
+    });
+
+    el.tableViewport.addEventListener('dragleave', () => {
+      el.tableViewport.classList.remove('drag-over');
+    });
+
+    el.tableViewport.addEventListener('drop', (e) => {
+      e.preventDefault();
+      el.tableViewport.classList.remove('drag-over');
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+        loadFiles(e.dataTransfer.files);
+      }
+    });
+
+    // Clipboard Paste (Ctrl+V)
+    window.addEventListener('paste', (e) => {
+      const items = e.clipboardData && e.clipboardData.items;
+      if (!items) return;
+      const pasted = [];
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.startsWith('image/')) {
+          const f = items[i].getAsFile();
+          if (f) pasted.push(f);
+        }
+      }
+      if (pasted.length) {
+        loadFiles(pasted);
+      }
+    });
+
+    // Remove Single Image Thumbnail
+    function removeImageAt(index) {
+      state.images.splice(index, 1);
+      if (state.activeIdx >= state.images.length) {
+        state.activeIdx = Math.max(0, state.images.length - 1);
+      }
+      renderAll();
+      showToast('Removed image');
+    }
+
+    // Clear All Uploaded Images
+    function clearAllImages() {
+      if (!state.images.length) {
+        showToast('Workspace is already blank');
+        return;
+      }
+      state.images = [];
+      state.activeIdx = 0;
+      renderAll();
+      showToast('Cleared all uploaded images');
+    }
+
+    el.btnClearImages.addEventListener('click', clearAllImages);
+    el.btnClearAllThumb.addEventListener('click', clearAllImages);
+
+    /* =====================================================================
+       3. ZOOM (- / +) & FIT TABLE CONTROLS
+       ===================================================================== */
+    function adjustZoom(delta) {
+      const item = getActiveImage();
+      if (!item) return;
+      item.fitMode = false;
+      item.zoom = Math.min(4, Math.max(0.05, Number((item.zoom + delta).toFixed(3))));
+      renderCanvas();
+    }
+
+    el.btnZoomOut.addEventListener('click', () => adjustZoom(-0.1));
+    el.btnZoomIn.addEventListener('click', () => adjustZoom(0.1));
+
+    el.btnFitTable.addEventListener('click', () => {
+      const item = getActiveImage();
+      if (!item) return;
+      item.fitMode = true;
+      item.zoom = computeFitZoom(item.width, item.height);
+      renderCanvas();
+      showToast('Fitted image to slicing table');
+    });
+
+    el.btnZoom100.addEventListener('click', () => {
+      const item = getActiveImage();
+      if (!item) return;
+      item.fitMode = false;
+      item.zoom = 1;
+      renderCanvas();
+    });
+
+    el.tableViewport.addEventListener('wheel', (e) => {
+      if (!e.ctrlKey && !e.metaKey) return;
+      const item = getActiveImage();
+      if (!item) return;
+      e.preventDefault();
+      adjustZoom(e.deltaY < 0 ? 0.08 : -0.08);
+    }, { passive: false });
+
+    window.addEventListener('resize', () => {
+      const item = getActiveImage();
+      if (item && item.fitMode) {
+        item.zoom = computeFitZoom(item.width, item.height);
+        renderCanvas();
+      }
+    });
+
+    /* =====================================================================
+       4. DOT-BY-DOT POLYGON SLICING CANVAS INTERACTION
+       ===================================================================== */
+    function getPointerCanvasCoords(e) {
+      const item = getActiveImage();
+      if (!item) return null;
+      const rect = el.canvas.getBoundingClientRect();
+      const scaleX = item.width / rect.width;
+      const scaleY = item.height / rect.height;
+      const x = Math.max(0, Math.min(item.width, (e.clientX - rect.left) * scaleX));
+      const y = Math.max(0, Math.min(item.height, (e.clientY - rect.top) * scaleY));
+      return { x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10 };
+    }
+
+    el.canvas.addEventListener('pointerdown', (e) => {
+      const item = getActiveImage();
+      if (!item) return;
+      const pt = getPointerCanvasCoords(e);
+      if (!pt) return;
+
+      const hitRadius = Math.max(10, 14 / item.zoom);
+
+      // Check if tapping an existing dot to drag it
+      for (let i = 0; i < item.dots.length; i++) {
+        const d = item.dots[i];
+        const dist = Math.hypot(d.x - pt.x, d.y - pt.y);
+        if (dist <= hitRadius) {
+          // If tapping first green dot with >= 3 dots, accept slice immediately
+          if (i === 0 && item.dots.length >= 3) {
+            acceptCurrentSlice();
+            return;
+          }
+          state.dragDotIdx = i;
+          el.canvas.setPointerCapture(e.pointerId);
+          return;
+        }
+      }
+
+      // Otherwise place new dot
+      item.dots.push(pt);
+      renderCanvas();
+    });
+
+    el.canvas.addEventListener('pointermove', (e) => {
+      if (state.dragDotIdx < 0) return;
+      const item = getActiveImage();
+      if (!item || !item.dots[state.dragDotIdx]) return;
+      const pt = getPointerCanvasCoords(e);
+      if (!pt) return;
+      item.dots[state.dragDotIdx] = pt;
+      renderCanvas();
+    });
+
+    el.canvas.addEventListener('pointerup', (e) => {
+      if (state.dragDotIdx >= 0) {
+        state.dragDotIdx = -1;
+        try { el.canvas.releasePointerCapture(e.pointerId); } catch (_) {}
+      }
+    });
+
+    el.btnUndoDot.addEventListener('click', () => {
+      const item = getActiveImage();
+      if (!item || !item.dots.length) {
+        showToast('No dots to undo');
+        return;
+      }
+      item.dots.pop();
+      renderCanvas();
+    });
+
+    el.btnClearDots.addEventListener('click', () => {
+      const item = getActiveImage();
+      if (!item || !item.dots.length) return;
+      item.dots = [];
+      renderCanvas();
+      showToast('Cleared cut dots');
+    });
+
+    /* =====================================================================
+       5. POLYGON SLICE EXTRACTION & UNIFIED SVG GENERATION
+       ===================================================================== */
+    function stripNearWhiteBackground(imageData) {
+      const data = imageData.data;
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        const a = data[i + 3];
+        if (a > 0 && r > 240 && g > 240 && b > 240) {
+          data[i + 3] = 0;
+        }
+      }
+      return imageData;
+    }
+
+    function acceptCurrentSlice() {
+      const item = getActiveImage();
+      if (!item) {
+        showToast('Upload an image first');
+        return;
+      }
+      if (item.dots.length < 3) {
+        showToast('Place at least 3 dots around a part before accepting slice');
+        return;
+      }
+
+      // Compute tight bounding box of polygon
+      let minX = item.width, minY = item.height, maxX = 0, maxY = 0;
+      item.dots.forEach((p) => {
+        if (p.x < minX) minX = p.x;
+        if (p.y < minY) minY = p.y;
+        if (p.x > maxX) maxX = p.x;
+        if (p.y > maxY) maxY = p.y;
+      });
+
+      minX = Math.max(0, Math.floor(minX));
+      minY = Math.max(0, Math.floor(minY));
+      maxX = Math.min(item.width, Math.ceil(maxX));
+      maxY = Math.min(item.height, Math.ceil(maxY));
+
+      const cropW = Math.max(4, maxX - minX);
+      const cropH = Math.max(4, maxY - minY);
+
+      // Draw clipped polygon onto offscreen full-resolution canvas
+      const offCanvas = document.createElement('canvas');
+      offCanvas.width = cropW;
+      offCanvas.height = cropH;
+      const offCtx = offCanvas.getContext('2d');
+
+      offCtx.save();
+      offCtx.beginPath();
+      item.dots.forEach((p, idx) => {
+        const lx = p.x - minX;
+        const ly = p.y - minY;
+        if (idx === 0) offCtx.moveTo(lx, ly);
+        else offCtx.lineTo(lx, ly);
+      });
+      offCtx.closePath();
+      offCtx.clip();
+      offCtx.drawImage(item.img, -minX, -minY, item.width, item.height);
+      offCtx.restore();
+
+      if (state.stripWhiteBg) {
+        const imgData = offCtx.getImageData(0, 0, cropW, cropH);
+        offCtx.putImageData(stripNearWhiteBackground(imgData), 0, 0);
+      }
+
+      const pngDataUrl = offCanvas.toDataURL('image/png');
+      const partNum = state.parts.length + 1;
+      const paddedNum = String(partNum).padStart(2, '0');
+      const filename = `part-${paddedNum}.svg`;
+
+      // Build standalone SVG (either Unified 256x256 or native crop dimensions)
+      const useUnified = state.unified256;
+      const svgW = useUnified ? 256 : cropW;
+      const svgH = useUnified ? 256 : cropH;
+
+      let imgX = 0, imgY = 0, imgDrawW = cropW, imgDrawH = cropH;
+      if (useUnified) {
+        const fitScale = Math.min(240 / cropW, 240 / cropH);
+        imgDrawW = Math.round(cropW * fitScale * 100) / 100;
+        imgDrawH = Math.round(cropH * fitScale * 100) / 100;
+        imgX = Math.round(((256 - imgDrawW) / 2) * 100) / 100;
+        imgY = Math.round(((256 - imgDrawH) / 2) * 100) / 100;
+      }
+
+      const localPolyStr = item.dots
+        .map(p => `${Math.round((p.x - minX) * 10) / 10},${Math.round((p.y - minY) * 10) / 10}`)
+        .join(' ');
+
+      const svgContent = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${svgW}" height="${svgH}" viewBox="0 0 ${svgW} ${svgH}" data-part-id="part-${paddedNum}" data-assembly-x="${minX}" data-assembly-y="${minY}" data-orig-w="${cropW}" data-orig-h="${cropH}">
+  <g id="part-${paddedNum}">
+    <image href="${pngDataUrl}" x="${imgX}" y="${imgY}" width="${imgDrawW}" height="${imgDrawH}" preserveAspectRatio="xMidYMid meet" />
+  </g>
+</svg>`;
+
+      const svgDataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgContent);
+
+      state.parts.push({
+        id: `part-${paddedNum}`,
+        filename,
+        svgContent,
+        svgDataUrl,
+        pngDataUrl,
+        x: minX,
+        y: minY,
+        width: cropW,
+        height: cropH,
+        localPolygon: localPolyStr,
+        polygon: item.dots.map(p => ({ x: p.x, y: p.y })),
+        sourceName: item.name,
+        sourceW: item.width,
+        sourceH: item.height
+      });
+
+      // Reset dots for next slice
+      item.dots = [];
+      renderCanvas();
+      renderPartsTray();
+      showToast(`Saved ${filename} (${cropW}×${cropH}px)`);
+    }
+
+    el.btnAcceptSlice.addEventListener('click', acceptCurrentSlice);
+
+    el.chkStripWhite.addEventListener('change', (e) => {
+      state.stripWhiteBg = e.target.checked;
+    });
+
+    el.chkUnified256.addEventListener('change', (e) => {
+      state.unified256 = e.target.checked;
+    });
+
+    /* =====================================================================
+       6. COMBINED SVG (SLICED + ASSEMBLY) & JSON MANIFEST BUILDERS
+       ===================================================================== */
+    function buildCombinedSvgString() {
+      const activeImg = getActiveImage();
+      const baseW = activeImg ? activeImg.width : Math.max(512, ...state.parts.map(p => p.x + p.width));
+      const baseH = activeImg ? activeImg.height : Math.max(512, ...state.parts.map(p => p.y + p.height));
+
+      // Layout: Left side = Assembly Composite, Right side = Exploded Sliced Parts Grid
+      const cols = Math.max(1, Math.ceil(Math.sqrt(state.parts.length)));
+      const cellSize = 180;
+      const gap = 20;
+      const gridW = cols * (cellSize + gap) + gap;
+      const rows = Math.max(1, Math.ceil(state.parts.length / cols));
+      const gridH = rows * (cellSize + gap) + gap;
+
+      const totalW = baseW + 60 + gridW;
+      const totalH = Math.max(baseH + 80, gridH + 80);
+
+      const defsXml = state.parts.map(p =>
+        `    <image id="asset-${p.id}" href="${p.pngDataUrl}" width="${p.width}" height="${p.height}" />`
+      ).join('\n');
+
+      const assemblyXml = state.parts.map(p =>
+        `    <use href="#asset-${p.id}" x="${p.x}" y="${p.y}" data-part-id="${p.id}" data-x="${p.x}" data-y="${p.y}" data-w="${p.width}" data-h="${p.height}" />`
+      ).join('\n');
+
+      const slicedXml = state.parts.map((p, idx) => {
+        const col = idx % cols;
+        const row = Math.floor(idx / cols);
+        const boxX = baseW + 40 + gap + col * (cellSize + gap);
+        const boxY = 50 + gap + row * (cellSize + gap);
+        const scale = Math.min((cellSize - 24) / p.width, (cellSize - 24) / p.height, 1);
+        const drawW = Math.round(p.width * scale * 100) / 100;
+        const drawH = Math.round(p.height * scale * 100) / 100;
+        const offX = Math.round((boxX + (cellSize - drawW) / 2) * 100) / 100;
+        const offY = Math.round((boxY + (cellSize - drawH) / 2) * 100) / 100;
+
+        return `    <g id="slice-${p.id}" data-part-id="${p.id}" data-assembly-x="${p.x}" data-assembly-y="${p.y}">
+      <rect x="${boxX}" y="${boxY}" width="${cellSize}" height="${cellSize}" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5" />
+      <image href="${p.pngDataUrl}" x="${offX}" y="${offY}" width="${drawW}" height="${drawH}" />
+      <text x="${boxX + cellSize / 2}" y="${boxY + cellSize - 6}" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#475569">${p.filename}</text>
+    </g>`;
+      }).join('\n');
+
+      return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${totalW}" height="${totalH}" viewBox="0 0 ${totalW} ${totalH}">
+  <defs>
+${defsXml}
+  </defs>
+
+  <!-- Assembly Composite Group -->
+  <g id="assembly" transform="translate(20, 50)">
+    <text x="0" y="-14" font-family="sans-serif" font-size="16" font-weight="bold" fill="#1e293b">ASSEMBLY (${baseW}×${baseH})</text>
+    <rect x="0" y="0" width="${baseW}" height="${baseH}" rx="12" fill="#ffffff" stroke="#94a3b8" stroke-dasharray="6 4" />
+${assemblyXml}
+  </g>
+
+  <!-- Exploded Sliced Parts Group -->
+  <g id="sliced-parts">
+    <text x="${baseW + 60}" y="36" font-family="sans-serif" font-size="16" font-weight="bold" fill="#1e293b">SLICED PARTS (${state.parts.length})</text>
+${slicedXml}
+  </g>
+</svg>`;
+    }
+
+    function buildAssemblyJsonString() {
+      const activeImg = getActiveImage();
+      const manifest = {
+        generator: 'SaNa Slicer Pro++ (Unified SVG & Assembly)',
+        exportedAt: new Date().toISOString(),
+        unified256: state.unified256,
+        stripWhiteBg: state.stripWhiteBg,
+        canvas: {
+          sourceImage: activeImg ? activeImg.name : (state.parts[0]?.sourceName || 'composite'),
+          width: activeImg ? activeImg.width : (state.parts[0]?.sourceW || 512),
+          height: activeImg ? activeImg.height : (state.parts[0]?.sourceH || 512)
+        },
+        totalParts: state.parts.length,
+        parts: state.parts.map((p, index) => ({
+          order: index + 1,
+          id: p.id,
+          filename: p.filename,
+          sourceImage: p.sourceName,
+          assemblyPosition: { x: p.x, y: p.y },
+          dimensions: { width: p.width, height: p.height },
+          polygonVertices: p.polygon
+        }))
+      };
+      return JSON.stringify(manifest, null, 2);
+    }
+
+    function triggerBlobDownload(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+    }
+
+    el.btnDownloadCombinedSvg.addEventListener('click', () => {
+      if (!state.parts.length) {
+        showToast('Slice at least 1 part before downloading Combined SVG');
+        return;
+      }
+      const svgStr = buildCombinedSvgString();
+      triggerBlobDownload(new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' }), 'combined-sliced-and-assembly.svg');
+      showToast('Downloaded combined-sliced-and-assembly.svg');
+    });
+
+    el.btnExportJson.addEventListener('click', () => {
+      if (!state.parts.length) {
+        showToast('Slice at least 1 part before exporting JSON');
+        return;
+      }
+      const jsonStr = buildAssemblyJsonString();
+      triggerBlobDownload(new Blob([jsonStr], { type: 'application/json;charset=utf-8' }), 'assembly-manifest.json');
+      showToast('Downloaded assembly-manifest.json');
+    });
+
+    /* =====================================================================
+       7. ONE-DESTINATION FOLDER EXPORT (WINDOWS PICKER + OFFLINE ZIP FALLBACK)
+       ===================================================================== */
+    function createOfflineZipBlob(files) {
+      // Zero-dependency STORE-mode ZIP builder for 100% offline mobile/browser support
+      const encoder = new TextEncoder();
+      const crcTable = new Uint32Array(256);
+      for (let i = 0; i < 256; i++) {
+        let c = i;
+        for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+        crcTable[i] = c;
+      }
+      function crc32(bytes) {
+        let crc = 0xFFFFFFFF;
+        for (let i = 0; i < bytes.length; i++) {
+          crc = crcTable[(crc ^ bytes[i]) & 0xFF] ^ (crc >>> 8);
+        }
+        return (crc ^ 0xFFFFFFFF) >>> 0;
+      }
+
+      const localParts = [];
+      const centralParts = [];
+      let offset = 0;
+
+      files.forEach((f) => {
+        const nameBytes = encoder.encode(f.name);
+        const dataBytes = typeof f.content === 'string' ? encoder.encode(f.content) : f.content;
+        const crc = crc32(dataBytes);
+
+        const localHeader = new Uint8Array(30 + nameBytes.length);
+        const lv = new DataView(localHeader.buffer);
+        lv.setUint32(0, 0x04034b50, true);
+        lv.setUint16(4, 20, true);
+        lv.setUint16(6, 0x0800, true);
+        lv.setUint16(8, 0, true);
+        lv.setUint16(10, 0, true);
+        lv.setUint16(12, 0, true);
+        lv.setUint32(14, crc, true);
+        lv.setUint32(18, dataBytes.length, true);
+        lv.setUint32(22, dataBytes.length, true);
+        lv.setUint16(26, nameBytes.length, true);
+        lv.setUint16(28, 0, true);
+        localHeader.set(nameBytes, 30);
+
+        const centralHeader = new Uint8Array(46 + nameBytes.length);
+        const cv = new DataView(centralHeader.buffer);
+        cv.setUint32(0, 0x02014b50, true);
+        cv.setUint16(4, 20, true);
+        cv.setUint16(6, 20, true);
+        cv.setUint16(8, 0x0800, true);
+        cv.setUint16(10, 0, true);
+        cv.setUint16(12, 0, true);
+        cv.setUint16(14, 0, true);
+        cv.setUint32(16, crc, true);
+        cv.setUint32(20, dataBytes.length, true);
+        cv.setUint32(24, dataBytes.length, true);
+        cv.setUint16(28, nameBytes.length, true);
+        cv.setUint16(30, 0, true);
+        cv.setUint16(32, 0, true);
+        cv.setUint16(34, 0, true);
+        cv.setUint16(36, 0, true);
+        cv.setUint32(38, 0, true);
+        cv.setUint32(42, offset, true);
+        centralHeader.set(nameBytes, 46);
+
+        localParts.push(localHeader, dataBytes);
+        centralParts.push(centralHeader);
+        offset += localHeader.length + dataBytes.length;
+      });
+
+      const centralSize = centralParts.reduce((acc, b) => acc + b.length, 0);
+      const eocd = new Uint8Array(22);
+      const ev = new DataView(eocd.buffer);
+      ev.setUint32(0, 0x06054b50, true);
+      ev.setUint16(4, 0, true);
+      ev.setUint16(6, 0, true);
+      ev.setUint16(8, files.length, true);
+      ev.setUint16(10, files.length, true);
+      ev.setUint32(12, centralSize, true);
+      ev.setUint32(16, offset, true);
+      ev.setUint16(20, 0, true);
+
+      return new Blob([...localParts, ...centralParts, eocd], { type: 'application/zip' });
+    }
+
+    el.btnSaveOneFolder.addEventListener('click', async () => {
+      if (!state.parts.length) {
+        showToast('Slice at least 1 part before saving to folder');
+        return;
+      }
+
+      const bundleFiles = [
+        { name: 'combined-sliced-and-assembly.svg', content: buildCombinedSvgString() },
+        { name: 'assembly-manifest.json', content: buildAssemblyJsonString() },
+        ...state.parts.map(p => ({ name: p.filename, content: p.svgContent }))
+      ];
+
+      // Use native Windows/Desktop Folder Picker when supported
+      if (typeof window.showDirectoryPicker === 'function') {
+        try {
+          const dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+          for (const f of bundleFiles) {
+            const fileHandle = await dirHandle.getFileHandle(f.name, { create: true });
+            const writable = await fileHandle.createWritable();
+            await writable.write(f.content);
+            await writable.close();
+          }
+          showToast(`Saved ${bundleFiles.length} files into "${dirHandle.name}"`);
+          return;
+        } catch (err) {
+          if (err && err.name === 'AbortError') return;
+        }
+      }
+
+      // Offline ZIP folder bundle fallback (for Android / Firefox / embedded previews)
+      const zipBlob = createOfflineZipBlob(bundleFiles);
+      triggerBlobDownload(zipBlob, 'sana-sliced-assembly-bundle.zip');
+      showToast(`Bundled ${bundleFiles.length} files into sana-sliced-assembly-bundle.zip`);
+    });
+
+    /* =====================================================================
+       8. RENDER FUNCTIONS (THUMBNAILS, CANVAS & PARTS TRAY)
+       ===================================================================== */
+    function renderThumbnails() {
+      el.thumbStrip.innerHTML = '';
+      const hasImages = state.images.length > 0;
+      el.thumbBarWrap.style.display = hasImages ? 'flex' : 'none';
+
+      if (!hasImages) return;
+
+      state.images.forEach((item, idx) => {
+        const card = document.createElement('div');
+        card.className = 'thumb-item' + (idx === state.activeIdx ? ' active' : '');
+        card.title = `${item.name} (${item.width}×${item.height})`;
+
+        const imgBox = document.createElement('div');
+        imgBox.className = 'thumb-img-box';
+        const img = document.createElement('img');
+        img.src = item.dataUrl;
+        img.alt = item.name;
+        imgBox.appendChild(img);
+
+        const badge = document.createElement('span');
+        badge.className = 'thumb-index';
+        badge.textContent = String(idx + 1);
+
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'thumb-del';
+        delBtn.textContent = '×';
+        delBtn.title = 'Remove this image';
+        delBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          removeImageAt(idx);
+        });
+
+        card.addEventListener('click', () => {
+          state.activeIdx = idx;
+          renderAll();
+        });
+
+        card.appendChild(imgBox);
+        card.appendChild(badge);
+        card.appendChild(delBtn);
+        el.thumbStrip.appendChild(card);
+      });
+    }
+
+    function renderCanvas() {
+      const item = getActiveImage();
+      if (!item) {
+        el.tableViewport.classList.remove('has-image');
+        el.emptyDropzone.style.display = 'flex';
+        el.canvasStage.style.display = 'none';
+        el.helperHint.style.display = 'none';
+        el.zoomReadout.textContent = '100%';
+        el.dimReadout.textContent = 'Blank Table';
+        return;
+      }
+
+      el.tableViewport.classList.add('has-image');
+      el.emptyDropzone.style.display = 'none';
+      el.canvasStage.style.display = 'inline-block';
+      el.helperHint.style.display = 'block';
+
+      const dispW = Math.max(24, Math.round(item.width * item.zoom));
+      const dispH = Math.max(24, Math.round(item.height * item.zoom));
+
+      el.zoomReadout.textContent = `${Math.round(item.zoom * 100)}%`;
+      el.dimReadout.textContent = `Orig: ${item.width}×${item.height} • Table: ${dispW}×${dispH}`;
+
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      el.canvas.style.width = dispW + 'px';
+      el.canvas.style.height = dispH + 'px';
+      el.canvas.width = Math.round(dispW * dpr);
+      el.canvas.height = Math.round(dispH * dpr);
+
+      ctx.save();
+      ctx.scale(dpr, dpr);
+      ctx.clearRect(0, 0, dispW, dispH);
+      ctx.drawImage(item.img, 0, 0, dispW, dispH);
+
+      // Draw polygon cut path & dots
+      if (item.dots.length > 0) {
+        const pts = item.dots.map(d => ({
+          x: d.x * item.zoom,
+          y: d.y * item.zoom
+        }));
+
+        if (pts.length >= 3) {
+          ctx.save();
+          ctx.beginPath();
+          pts.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
+          ctx.closePath();
+          ctx.fillStyle = 'rgba(239, 68, 68, 0.16)';
+          ctx.fill();
+          ctx.restore();
+        }
+
+        // Red dotted lines connecting vertices
+        ctx.save();
+        ctx.beginPath();
+        pts.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
+        if (pts.length >= 3) {
+          ctx.lineTo(pts[0].x, pts[0].y);
+        }
+        ctx.setLineDash([5, 5]);
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = '#ef4444';
+        ctx.stroke();
+        ctx.restore();
+
+        // Draw vertex dots (First dot green, subsequent dots red)
+        pts.forEach((p, i) => {
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, i === 0 ? 7 : 5.5, 0, Math.PI * 2);
+          ctx.fillStyle = i === 0 ? '#10b981' : '#ef4444';
+          ctx.fill();
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = '#ffffff';
+          ctx.stroke();
+          ctx.restore();
+        });
+      }
+
+      ctx.restore();
+    }
+
+    function renderPartsTray() {
+      el.storeTitle.textContent = `📦 Store Sliced Parts (${state.parts.length})`;
+      el.btnClearParts.style.display = state.parts.length ? 'inline-flex' : 'none';
+      el.partsGrid.innerHTML = '';
+
+      if (!state.parts.length) {
+        const empty = document.createElement('div');
+        empty.className = 'parts-empty';
+        empty.innerHTML = 'No sliced parts yet. Upload an image, trace dots around a part, and tap <strong>✂️ Accept Slice</strong>.';
+        el.partsGrid.appendChild(empty);
+        return;
+      }
+
+      state.parts.forEach((part, idx) => {
+        const card = document.createElement('div');
+        card.className = 'part-card';
+
+        const prev = document.createElement('div');
+        prev.className = 'part-preview';
+        prev.title = 'Tap to inspect';
+        const img = document.createElement('img');
+        img.src = part.svgDataUrl;
+        img.alt = part.filename;
+        prev.appendChild(img);
+        prev.addEventListener('click', () => openInspectModal(part));
+
+        const name = document.createElement('div');
+        name.className = 'part-name';
+        name.textContent = part.filename;
+
+        const meta = document.createElement('div');
+        meta.className = 'part-meta';
+        meta.textContent = `${part.width}×${part.height} • (${part.x},${part.y})`;
+
+        const actions = document.createElement('div');
+        actions.className = 'part-actions';
+
+        const dlBtn = document.createElement('button');
+        dlBtn.type = 'button';
+        dlBtn.className = 'part-btn';
+        dlBtn.textContent = '📥 SVG';
+        dlBtn.addEventListener('click', () => {
+          triggerBlobDownload(new Blob([part.svgContent], { type: 'image/svg+xml;charset=utf-8' }), part.filename);
+        });
+
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'part-btn part-btn-del';
+        delBtn.textContent = '🗑️';
+        delBtn.title = 'Delete part';
+        delBtn.addEventListener('click', () => {
+          state.parts.splice(idx, 1);
+          renderPartsTray();
+          showToast(`Deleted ${part.filename}`);
+        });
+
+        actions.appendChild(dlBtn);
+        actions.appendChild(delBtn);
+
+        card.appendChild(prev);
+        card.appendChild(name);
+        card.appendChild(meta);
+        card.appendChild(actions);
+        el.partsGrid.appendChild(card);
+      });
+    }
+
+    el.btnClearParts.addEventListener('click', () => {
+      state.parts = [];
+      renderPartsTray();
+      showToast('Cleared all sliced parts');
+    });
+
+    /* =====================================================================
+       9. INSPECT MODAL
+       ===================================================================== */
+    function openInspectModal(part) {
+      state.inspectedPart = part;
+      el.modalTitle.textContent = part.filename;
+      el.modalImg.src = part.svgDataUrl;
+      el.modalMeta.textContent = `Assembly Position: X=${part.x}px, Y=${part.y}px • Size: ${part.width}×${part.height}px • Source: ${part.sourceName}`;
+      el.inspectModal.classList.add('open');
+    }
+
+    el.btnCloseModal.addEventListener('click', () => {
+      el.inspectModal.classList.remove('open');
+    });
+
+    el.inspectModal.addEventListener('click', (e) => {
+      if (e.target === el.inspectModal) {
+        el.inspectModal.classList.remove('open');
+      }
+    });
+
+    el.btnModalDownload.addEventListener('click', () => {
+      if (!state.inspectedPart) return;
+      triggerBlobDownload(
+        new Blob([state.inspectedPart.svgContent], { type: 'image/svg+xml;charset=utf-8' }),
+        state.inspectedPart.filename
+      );
+    });
+
+    function renderAll() {
+      renderThumbnails();
+      renderCanvas();
+      renderPartsTray();
+    }
+
+    // Initialize in 100% blank state
+    renderAll();
+  </script>
+</body>
+</html>
