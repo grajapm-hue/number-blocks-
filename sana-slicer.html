@@ -729,7 +729,7 @@
     <section class="card">
       <header class="app-header">
         <h1 class="app-title">🤖 SaNa Slicer Pro++ (Unified SVG &amp; Assembly)</h1>
-        <small style="display:block;text-align:center;color:#64748b">Slicer v5 · White Board</small>
+        <small style="display:block;text-align:center;color:#64748b">Slicer v6 · Manual Cutting</small>
       </header>
 
       <!-- Row 1: Upload, Undo Dot, Accept Slice, Clear Images -->
@@ -838,7 +838,7 @@
       </div>
 
       <p class="helper-hint" id="helperHint" style="display:none;">
-        Tap or click around a part to place green/red cut dots, then tap <strong>✂️ Accept Slice</strong> (or tap the green start dot to close).
+        Tap or click around a part to place green/red cut dots, then tap <strong>✂️ Accept Slice</strong>. Each tap adds one dot; Undo Dot removes the last point.
       </p>
     </section>
 
@@ -1193,61 +1193,29 @@
       return { x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10 };
     }
 
-    el.canvas.addEventListener('pointerdown', (e) => {
-      const item = getActiveImage();
-      if (!item) return;
+    let pendingTap = null;
+    el.canvas.addEventListener('pointerdown', e => {
+      if (!e.isPrimary || e.button !== 0 || !getActiveImage()) return;
+      pendingTap = {id:e.pointerId,x:e.clientX,y:e.clientY,item:getActiveImage()};
+      el.canvas.setPointerCapture(e.pointerId);
+    });
+    el.canvas.addEventListener('pointermove', e => {
+      if (pendingTap && pendingTap.id === e.pointerId &&
+          Math.hypot(e.clientX-pendingTap.x,e.clientY-pendingTap.y)>8) pendingTap.cancelled = true;
+    });
+    el.canvas.addEventListener('pointerup', e => {
+      if (!pendingTap || pendingTap.id !== e.pointerId) return;
+      const tap = pendingTap;
+      pendingTap = null;
+      if (tap.cancelled || tap.item !== getActiveImage() ||
+          Math.hypot(e.clientX-tap.x,e.clientY-tap.y)>8) return;
       const pt = getPointerCanvasCoords(e);
       if (!pt) return;
-
-      const hitRadius = dotProfiles[dotSize.value].hit;
-      const rect = el.canvas.getBoundingClientRect();
-      const sx = board.sx * rect.width / board.w, sy = board.sy * rect.height / board.h;
-      let nearest = -1, best = Infinity;
-
-      // Check if tapping an existing dot to drag it
-      for (let i = 0; i < item.dots.length; i++) {
-        const d = item.dots[i];
-        const dist = Math.hypot((d.x - pt.x)*sx, (d.y - pt.y)*sy);
-        if (dist <= hitRadius && dist < best) { nearest = i; best = dist; }
-      }
-      if (nearest >= 0) {
-        const i = nearest;
-        {
-          // If tapping first green dot with >= 3 dots, accept slice immediately
-          if (i === 0 && item.dots.length >= 3) {
-            acceptCurrentSlice();
-            return;
-          }
-          state.dragDotIdx = i;
-          el.canvas.setPointerCapture(e.pointerId);
-          return;
-        }
-      }
-
-      // Otherwise place new dot
-      item.dots.push(pt);
+      tap.item.dots.push(pt);
       renderCanvas();
     });
-
-    el.canvas.addEventListener('pointermove', (e) => {
-      if (state.dragDotIdx < 0) return;
-      const item = getActiveImage();
-      if (!item || !item.dots[state.dragDotIdx]) return;
-      const pt = getPointerCanvasCoords(e);
-      if (!pt) return;
-      item.dots[state.dragDotIdx] = pt;
-      renderCanvas();
-    });
-
-    el.canvas.addEventListener('pointerup', (e) => {
-      if (state.dragDotIdx >= 0) {
-        state.dragDotIdx = -1;
-        try { el.canvas.releasePointerCapture(e.pointerId); } catch (_) {}
-      }
-    });
-
-    el.canvas.addEventListener('pointercancel', () => { state.dragDotIdx = -1; });
-    el.canvas.addEventListener('lostpointercapture', () => { state.dragDotIdx = -1; });
+    el.canvas.addEventListener('pointercancel', () => { pendingTap = null; });
+    el.canvas.addEventListener('lostpointercapture', () => { pendingTap = null; });
 
     el.btnUndoDot.addEventListener('click', () => {
       const item = getActiveImage();
@@ -1738,23 +1706,10 @@ ${slicedXml}
           y: board.y + d.y * board.sy
         }));
 
-        if (pts.length >= 3) {
-          ctx.save();
-          ctx.beginPath();
-          pts.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
-          ctx.closePath();
-          ctx.fillStyle = 'rgba(239, 68, 68, 0.16)';
-          ctx.fill();
-          ctx.restore();
-        }
-
         // Red dotted lines connecting vertices
         ctx.save();
         ctx.beginPath();
         pts.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
-        if (pts.length >= 3) {
-          ctx.lineTo(pts[0].x, pts[0].y);
-        }
         ctx.setLineDash([5, 5]);
         ctx.lineWidth = dotProfiles[dotSize.value].line;
         ctx.strokeStyle = '#ef4444';
