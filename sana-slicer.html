@@ -756,6 +756,14 @@
         </button>
       </div>
 
+      <div class="pill-row" role="group" aria-label="Cutting dot size">
+        <label class="check-pill" for="dotSize">Cutting dots</label>
+        <select id="dotSize" class="check-pill" aria-label="Cutting dot size">
+          <option value="sharp">Sharp (4 px)</option>
+          <option value="medium">Medium (8 px)</option>
+          <option value="normal" selected>Normal (12 px)</option>
+        </select>
+      </div>
       <!-- Row 2: Strip White BG & Unified 256x256 SVG Options -->
       <div class="pill-row">
         <label class="check-pill" title="Automatically make white background pixels transparent">
@@ -933,6 +941,9 @@
       btnModalDownload: document.getElementById('btnModalDownload')
     };
 
+    const dotProfiles = { sharp: {radius:2, hit:3, line:1}, medium:{radius:4, hit:6, line:1.5}, normal:{radius:6, hit:9, line:2.5} };
+    const dotSize = document.getElementById('dotSize');
+    dotSize.addEventListener('change', renderCanvas);
     const ctx = el.canvas.getContext('2d');
     let toastTimer = null;
 
@@ -1192,13 +1203,20 @@
       const pt = getPointerCanvasCoords(e);
       if (!pt) return;
 
-      const hitRadius = Math.max(10, 14 / item.zoom);
+      const hitRadius = dotProfiles[dotSize.value].hit;
+      const rect = el.canvas.getBoundingClientRect();
+      const sx = rect.width / item.width, sy = rect.height / item.height;
+      let nearest = -1, best = Infinity;
 
       // Check if tapping an existing dot to drag it
       for (let i = 0; i < item.dots.length; i++) {
         const d = item.dots[i];
-        const dist = Math.hypot(d.x - pt.x, d.y - pt.y);
-        if (dist <= hitRadius) {
+        const dist = Math.hypot((d.x - pt.x)*sx, (d.y - pt.y)*sy);
+        if (dist <= hitRadius && dist < best) { nearest = i; best = dist; }
+      }
+      if (nearest >= 0) {
+        const i = nearest;
+        {
           // If tapping first green dot with >= 3 dots, accept slice immediately
           if (i === 0 && item.dots.length >= 3) {
             acceptCurrentSlice();
@@ -1231,6 +1249,9 @@
         try { el.canvas.releasePointerCapture(e.pointerId); } catch (_) {}
       }
     });
+
+    el.canvas.addEventListener('pointercancel', () => { state.dragDotIdx = -1; });
+    el.canvas.addEventListener('lostpointercapture', () => { state.dragDotIdx = -1; });
 
     el.btnUndoDot.addEventListener('click', () => {
       const item = getActiveImage();
@@ -1735,7 +1756,7 @@ ${slicedXml}
           ctx.lineTo(pts[0].x, pts[0].y);
         }
         ctx.setLineDash([5, 5]);
-        ctx.lineWidth = 2.5;
+        ctx.lineWidth = dotProfiles[dotSize.value].line;
         ctx.strokeStyle = '#ef4444';
         ctx.stroke();
         ctx.restore();
@@ -1744,10 +1765,10 @@ ${slicedXml}
         pts.forEach((p, i) => {
           ctx.save();
           ctx.beginPath();
-          ctx.arc(p.x, p.y, i === 0 ? 7 : 5.5, 0, Math.PI * 2);
+          ctx.arc(p.x, p.y, dotProfiles[dotSize.value].radius + (i === 0 ? 0.5 : 0), 0, Math.PI * 2);
           ctx.fillStyle = i === 0 ? '#10b981' : '#ef4444';
           ctx.fill();
-          ctx.lineWidth = 2;
+          ctx.lineWidth = dotSize.value === 'sharp' ? 0.7 : 1;
           ctx.strokeStyle = '#ffffff';
           ctx.stroke();
           ctx.restore();
