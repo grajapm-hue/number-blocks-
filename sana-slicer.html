@@ -787,8 +787,8 @@
           <span>📥 Export JSON</span>
         </button>
 
-        <button type="button" id="btnSaveOneFolder" class="pill-btn btn-indigo" title="Save Combined SVG, JSON, and all sliced SVGs into one destination folder">
-          <span>📁 Save All to One Folder</span>
+        <button type="button" id="btnSaveOneFolder" class="pill-btn btn-indigo" title="Download one ZIP ready for SaNa Toddlers integration">
+          <span>📦 Combo Download (ChatGPT ZIP)</span>
         </button>
       </div>
 
@@ -1341,7 +1341,8 @@
       }
 
       const pngDataUrl = offCanvas.toDataURL('image/png');
-      const partNum = state.parts.length + 1;
+      let partNum = 1;
+      while (state.parts.some(p => p.id === `part-${String(partNum).padStart(2, '0')}`)) partNum++;
       const paddedNum = String(partNum).padStart(2, '0');
       const filename = `part-${paddedNum}.svg`;
 
@@ -1385,6 +1386,7 @@
         localPolygon: localPolyStr,
         polygon: item.dots.map(p => ({ x: p.x, y: p.y })),
         sourceName: item.name,
+        sourceId: item.id,
         sourceW: item.width,
         sourceH: item.height
       });
@@ -1490,6 +1492,9 @@ ${slicedXml}
           id: p.id,
           filename: p.filename,
           sourceImage: p.sourceName,
+          sourceId: p.sourceId,
+          sourceDimensions: { width: p.sourceW, height: p.sourceH },
+          nativePng: p.id + ".png",
           assemblyPosition: { x: p.x, y: p.y },
           dimensions: { width: p.width, height: p.height },
           polygonVertices: p.polygon
@@ -1620,33 +1625,27 @@ ${slicedXml}
         return;
       }
 
+      if (new Set(state.parts.map(p => p.sourceId)).size > 1) {
+        showToast('Export one source image per assembly bundle. Clear stored parts before slicing another image.');
+        return;
+      }
+      const manifest = JSON.parse(buildAssemblyJsonString());
+      const first = state.parts[0];
+      manifest.canvas = { sourceImage: first.sourceName, width: first.sourceW, height: first.sourceH };
+      manifest.targetGame = 'SaNa Toddlers / Kids Assemble Exploring';
+      manifest.schemaVersion = 1;
       const bundleFiles = [
         { name: 'combined-sliced-and-assembly.svg', content: buildCombinedSvgString() },
-        { name: 'assembly-manifest.json', content: buildAssemblyJsonString() },
-        ...state.parts.map(p => ({ name: p.filename, content: p.svgContent }))
+        { name: 'assembly-manifest.json', content: JSON.stringify(manifest, null, 2) },
+        { name: 'README.txt', content: 'SaNa Toddlers - Kids Assemble Exploring integration package. Use assembly-manifest.json as the source of truth. Place each native PNG at assemblyPosition x,y with dimensions width,height in the original canvas coordinate system. Scale the whole canvas uniformly for responsive layouts. Individual SVGs may contain 256px padding; use native PNGs for exact assembly. Preserve transparency. Combined SVG is a visual reference. Verify the assembled image and existing game behavior before deployment.' },
+        ...state.parts.flatMap(p => [
+          { name: p.filename, content: p.svgContent },
+          { name: p.id + '.png', content: Uint8Array.from(atob(p.pngDataUrl.split(',')[1]), ch => ch.charCodeAt(0)) }
+        ])
       ];
-
-      // Use native Windows/Desktop Folder Picker when supported
-      if (typeof window.showDirectoryPicker === 'function') {
-        try {
-          const dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
-          for (const f of bundleFiles) {
-            const fileHandle = await dirHandle.getFileHandle(f.name, { create: true });
-            const writable = await fileHandle.createWritable();
-            await writable.write(f.content);
-            await writable.close();
-          }
-          showToast(`Saved ${bundleFiles.length} files into "${dirHandle.name}"`);
-          return;
-        } catch (err) {
-          if (err && err.name === 'AbortError') return;
-        }
-      }
-
-      // Offline ZIP folder bundle fallback (for Android / Firefox / embedded previews)
       const zipBlob = createOfflineZipBlob(bundleFiles);
-      triggerBlobDownload(zipBlob, 'sana-sliced-assembly-bundle.zip');
-      showToast(`Bundled ${bundleFiles.length} files into sana-sliced-assembly-bundle.zip`);
+      triggerBlobDownload(zipBlob, 'sana-kids-assemble-bundle.zip');
+      showToast('ChatGPT integration ZIP downloaded');
     });
 
     /* =====================================================================
