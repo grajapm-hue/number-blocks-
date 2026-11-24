@@ -1,11 +1,8 @@
-const CACHE_NAME = 'hedgehog-maze-v3';
+const CACHE_NAME = 'slicer-v1';
 const ASSETS = [
   './',
   './index.html',
-  './tv.html',
-  './style.css',
-  './app.js',
-  './tv-sync.js',
+  './sana-slicer.html',
   './manifest.json',
   './icons/icon-192.png',
   './icons/icon-512.png',
@@ -27,7 +24,7 @@ self.addEventListener('activate', event => {
     caches.keys().then(keys => {
       return Promise.all(
         keys.map(key => {
-          if (key !== CACHE_NAME) {
+          if (key !== CACHE_NAME && (key.startsWith('hedgehog-maze-') || key.startsWith('slicer-'))) {
             return caches.delete(key);
           }
         })
@@ -38,6 +35,7 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
+  if (event.request.method !== 'GET' || !event.request.url.startsWith(self.registration.scope)) return;
   event.respondWith(
     caches.match(event.request).then(cachedResponse => {
       return cachedResponse || fetch(event.request);
