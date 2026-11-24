@@ -729,7 +729,7 @@
     <section class="card">
       <header class="app-header">
         <h1 class="app-title">🤖 SaNa Slicer Pro++ (Unified SVG &amp; Assembly)</h1>
-        <small style="display:block;text-align:center;color:#64748b">Slicer v7 · Progressive Cutting</small>
+        <small style="display:block;text-align:center;color:#64748b">Slicer v8 · Progressive Cutting</small>
       </header>
 
       <!-- Row 1: Upload, Undo Dot, Accept Slice, Clear Images -->
@@ -1478,7 +1478,7 @@ ${slicedXml}
           sourceImage: p.sourceName,
           sourceId: p.sourceId,
           sourceDimensions: { width: p.sourceW, height: p.sourceH },
-          nativePng: p.id + ".png",
+          svgContentBounds: (() => { const m = p.svgContent.match(/<image\s+href="[^"]+"\s+x="([^"]+)"\s+y="([^"]+)"\s+width="([^"]+)"\s+height="([^"]+)"/); return m ? {x:Number(m[1]),y:Number(m[2]),width:Number(m[3]),height:Number(m[4])} : null; })(),
           assemblyPosition: { x: p.x, y: p.y },
           dimensions: { width: p.width, height: p.height },
           polygonVertices: p.polygon
@@ -1621,11 +1621,8 @@ ${slicedXml}
       const bundleFiles = [
         { name: 'combined-sliced-and-assembly.svg', content: buildCombinedSvgString() },
         { name: 'assembly-manifest.json', content: JSON.stringify(manifest, null, 2) },
-        { name: 'README.txt', content: 'SaNa Toddlers - Kids Assemble Exploring integration package. Use assembly-manifest.json as the source of truth. Place each native PNG at assemblyPosition x,y with dimensions width,height in the original canvas coordinate system. Scale the whole canvas uniformly for responsive layouts. Individual SVGs may contain 256px padding; use native PNGs for exact assembly. Preserve transparency. Combined SVG is a visual reference. Verify the assembled image and existing game behavior before deployment.' },
-        ...state.parts.flatMap(p => [
-          { name: p.filename, content: p.svgContent },
-          { name: p.id + '.png', content: Uint8Array.from(atob(p.pngDataUrl.split(',')[1]), ch => ch.charCodeAt(0)) }
-        ])
+        { name: 'README.txt', content: 'SaNa Toddlers Kids Assemble Exploring. Use assembly-manifest.json for original canvas and part positions. Each SVG embeds its native transparent PNG. For exact assembly, extract the embedded PNG or crop the SVG viewBox to svgContentBounds and render at dimensions.width and dimensions.height, positioned at assemblyPosition. Do not stretch the padded 256px tile directly into the original crop. Preserve transparency and verify assembly before deployment.' },
+        ...state.parts.map(p => ({name:p.filename,content:p.svgContent}))
       ];
       const zipBlob = createOfflineZipBlob(bundleFiles);
       triggerBlobDownload(zipBlob, 'sana-kids-assemble-bundle.zip');
