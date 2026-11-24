@@ -729,6 +729,7 @@
     <section class="card">
       <header class="app-header">
         <h1 class="app-title">🤖 SaNa Slicer Pro++ (Unified SVG &amp; Assembly)</h1>
+        <small style="display:block;text-align:center;color:#64748b">Slicer v5 · White Board</small>
       </header>
 
       <!-- Row 1: Upload, Undo Dot, Accept Slice, Clear Images -->
@@ -815,11 +816,13 @@
         </div>
       </div>
 
-      <div class="pill-row" role="group" aria-label="Cutting dot size" style="margin:8px 0">
-        <span>Cutting dots:</span>
-        <button type="button" class="mini-btn" data-dot="sharp" aria-pressed="false">Sharp</button>
-        <button type="button" class="mini-btn" data-dot="medium" aria-pressed="false">Medium</button>
-        <button type="button" class="mini-btn mini-btn-primary" data-dot="normal" aria-pressed="true">Normal</button>
+      <div class="pill-row" style="margin:8px 0">
+        <label class="check-pill" for="dotSize">Cutting dots</label>
+        <select id="dotSize" class="check-pill" aria-label="Cutting dot size">
+          <option value="sharp">Sharp (4 px)</option>
+          <option value="medium">Medium (8 px)</option>
+          <option value="normal" selected>Normal (12 px)</option>
+        </select>
       </div>
       <!-- Slicing Table Viewport (100% Blank Dropzone by Default) -->
       <div class="table-viewport" id="tableViewport">
@@ -936,17 +939,9 @@
     };
 
     const dotProfiles = { sharp: {radius:2, hit:3, line:1}, medium:{radius:4, hit:6, line:1.5}, normal:{radius:6, hit:9, line:2.5} };
-    const dotSize = {value:'normal'};
+    const dotSize = document.getElementById('dotSize');
     let board = {x:0,y:0,sx:1,sy:1,w:1,h:1};
-    document.querySelectorAll('[data-dot]').forEach(btn => btn.addEventListener('click', () => {
-      dotSize.value = btn.dataset.dot;
-      document.querySelectorAll('[data-dot]').forEach(b => {
-        const active = b === btn;
-        b.classList.toggle('mini-btn-primary', active);
-        b.setAttribute('aria-pressed', String(active));
-      });
-      renderCanvas();
-    }));
+    dotSize.addEventListener('change', renderCanvas);
     const ctx = el.canvas.getContext('2d');
     let toastTimer = null;
 
@@ -1732,7 +1727,8 @@ ${slicedXml}
 
       ctx.save();
       ctx.scale(dpr, dpr);
-      ctx.clearRect(0, 0, board.w, board.h);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, board.w, board.h);
       ctx.drawImage(item.img, board.x, board.y, dispW, dispH);
 
       // Draw polygon cut path & dots
