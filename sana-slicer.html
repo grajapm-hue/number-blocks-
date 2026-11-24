@@ -451,13 +451,7 @@
     .table-viewport.has-image {
       border-style: solid;
       border-color: #e2e8f0;
-      background-image:
-        linear-gradient(45deg, #f8fafc 25%, transparent 25%),
-        linear-gradient(-45deg, #f8fafc 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, #f8fafc 75%),
-        linear-gradient(-45deg, transparent 75%, #f8fafc 75%);
-      background-size: 20px 20px;
-      background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+      background: #fff;
     }
 
     .empty-dropzone {
@@ -496,14 +490,15 @@
       display: none;
       position: relative;
       margin: auto;
-      padding: 12px;
+      padding: 0;
+      flex-shrink: 0;
       line-height: 0;
     }
 
     #slicingCanvas {
       display: block;
       border-radius: 6px;
-      box-shadow: 0 4px 18px rgba(15, 23, 42, 0.12);
+      background: #fff;
       cursor: crosshair;
       touch-action: none;
     }
@@ -756,14 +751,7 @@
         </button>
       </div>
 
-      <div class="pill-row" role="group" aria-label="Cutting dot size">
-        <label class="check-pill" for="dotSize">Cutting dots</label>
-        <select id="dotSize" class="check-pill" aria-label="Cutting dot size">
-          <option value="sharp">Sharp (4 px)</option>
-          <option value="medium">Medium (8 px)</option>
-          <option value="normal" selected>Normal (12 px)</option>
-        </select>
-      </div>
+
       <!-- Row 2: Strip White BG & Unified 256x256 SVG Options -->
       <div class="pill-row">
         <label class="check-pill" title="Automatically make white background pixels transparent">
@@ -827,6 +815,12 @@
         </div>
       </div>
 
+      <div class="pill-row" role="group" aria-label="Cutting dot size" style="margin:8px 0">
+        <span>Cutting dots:</span>
+        <button type="button" class="mini-btn" data-dot="sharp" aria-pressed="false">Sharp</button>
+        <button type="button" class="mini-btn" data-dot="medium" aria-pressed="false">Medium</button>
+        <button type="button" class="mini-btn mini-btn-primary" data-dot="normal" aria-pressed="true">Normal</button>
+      </div>
       <!-- Slicing Table Viewport (100% Blank Dropzone by Default) -->
       <div class="table-viewport" id="tableViewport">
         <div class="empty-dropzone" id="emptyDropzone" role="button" tabindex="0" title="Click to open internal folder and select images">
@@ -942,8 +936,17 @@
     };
 
     const dotProfiles = { sharp: {radius:2, hit:3, line:1}, medium:{radius:4, hit:6, line:1.5}, normal:{radius:6, hit:9, line:2.5} };
-    const dotSize = document.getElementById('dotSize');
-    dotSize.addEventListener('change', renderCanvas);
+    const dotSize = {value:'normal'};
+    let board = {x:0,y:0,sx:1,sy:1,w:1,h:1};
+    document.querySelectorAll('[data-dot]').forEach(btn => btn.addEventListener('click', () => {
+      dotSize.value = btn.dataset.dot;
+      document.querySelectorAll('[data-dot]').forEach(b => {
+        const active = b === btn;
+        b.classList.toggle('mini-btn-primary', active);
+        b.setAttribute('aria-pressed', String(active));
+      });
+      renderCanvas();
+    }));
     const ctx = el.canvas.getContext('2d');
     let toastTimer = null;
 
@@ -969,8 +972,8 @@
        ===================================================================== */
     function computeFitZoom(imgW, imgH) {
       const rect = el.tableViewport.getBoundingClientRect();
-      const availW = Math.max(220, (rect.width || window.innerWidth - 48) - 32);
-      const availH = Math.max(220, (rect.height || 360) - 32);
+      const availW = Math.max(220, (rect.width || window.innerWidth - 48) - 56);
+      const availH = Math.max(220, (rect.height || 360) - 56);
       const scale = Math.min(availW / imgW, availH / imgH, 1.5);
       return Math.max(0.05, Number(scale.toFixed(4)));
     }
@@ -1190,10 +1193,8 @@
       const item = getActiveImage();
       if (!item) return null;
       const rect = el.canvas.getBoundingClientRect();
-      const scaleX = item.width / rect.width;
-      const scaleY = item.height / rect.height;
-      const x = Math.max(0, Math.min(item.width, (e.clientX - rect.left) * scaleX));
-      const y = Math.max(0, Math.min(item.height, (e.clientY - rect.top) * scaleY));
+      const x = ((e.clientX - rect.left) * board.w / rect.width - board.x) / board.sx;
+      const y = ((e.clientY - rect.top) * board.h / rect.height - board.y) / board.sy;
       return { x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10 };
     }
 
@@ -1205,7 +1206,7 @@
 
       const hitRadius = dotProfiles[dotSize.value].hit;
       const rect = el.canvas.getBoundingClientRect();
-      const sx = rect.width / item.width, sy = rect.height / item.height;
+      const sx = board.sx * rect.width / board.w, sy = board.sy * rect.height / board.h;
       let nearest = -1, best = Infinity;
 
       // Check if tapping an existing dot to drag it
@@ -1313,6 +1314,7 @@
       maxX = Math.min(item.width, Math.ceil(maxX));
       maxY = Math.min(item.height, Math.ceil(maxY));
 
+      if (maxX <= minX || maxY <= minY) { showToast("Cut must overlap the image"); return; }
       const cropW = Math.max(4, maxX - minX);
       const cropH = Math.max(4, maxY - minY);
 
@@ -1720,21 +1722,24 @@ ${slicedXml}
       el.dimReadout.textContent = `Orig: ${item.width}×${item.height} • Table: ${dispW}×${dispH}`;
 
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      el.canvas.style.width = dispW + 'px';
-      el.canvas.style.height = dispH + 'px';
-      el.canvas.width = Math.round(dispW * dpr);
-      el.canvas.height = Math.round(dispH * dpr);
+      const w = Math.max(el.tableViewport.clientWidth, dispW + 48);
+      const h = Math.max(el.tableViewport.clientHeight, dispH + 48);
+      board = {w,h,x:(w-dispW)/2,y:(h-dispH)/2,sx:dispW/item.width,sy:dispH/item.height};
+      el.canvas.style.width = w + 'px';
+      el.canvas.style.height = h + 'px';
+      el.canvas.width = Math.round(w * dpr);
+      el.canvas.height = Math.round(h * dpr);
 
       ctx.save();
       ctx.scale(dpr, dpr);
-      ctx.clearRect(0, 0, dispW, dispH);
-      ctx.drawImage(item.img, 0, 0, dispW, dispH);
+      ctx.clearRect(0, 0, board.w, board.h);
+      ctx.drawImage(item.img, board.x, board.y, dispW, dispH);
 
       // Draw polygon cut path & dots
       if (item.dots.length > 0) {
         const pts = item.dots.map(d => ({
-          x: d.x * item.zoom,
-          y: d.y * item.zoom
+          x: board.x + d.x * board.sx,
+          y: board.y + d.y * board.sy
         }));
 
         if (pts.length >= 3) {
