@@ -1413,8 +1413,8 @@
        ===================================================================== */
     function buildCombinedSvgString() {
       const activeImg = getActiveImage();
-      const baseW = activeImg ? activeImg.width : Math.max(512, ...state.parts.map(p => p.x + p.width));
-      const baseH = activeImg ? activeImg.height : Math.max(512, ...state.parts.map(p => p.y + p.height));
+      const baseW = Math.max(...state.parts.map(p => p.sourceW || p.x + p.width));
+      const baseH = Math.max(...state.parts.map(p => p.sourceH || p.y + p.height));
 
       // Layout: Left side = Assembly Composite, Right side = Exploded Sliced Parts Grid
       const cols = Math.max(1, Math.ceil(Math.sqrt(state.parts.length)));
