@@ -1,6 +1,6 @@
 {
-  "name": "Hedgehog Bead Maze Puzzle",
-  "short_name": "HedgehogMaze",
+  "name": "Slicer",
+  "short_name": "Slicer",
   "description": "Interactive wooden hedgehog magnetic bead puzzle game for kids",
   "start_url": "./index.html",
   "display": "standalone",
