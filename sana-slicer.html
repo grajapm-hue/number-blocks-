@@ -729,7 +729,7 @@
     <section class="card">
       <header class="app-header">
         <h1 class="app-title">🤖 SaNa Slicer Pro++ (Unified SVG &amp; Assembly)</h1>
-        <small style="display:block;text-align:center;color:#64748b">Slicer v6 · Manual Cutting</small>
+        <small style="display:block;text-align:center;color:#64748b">Slicer v7 · Progressive Cutting</small>
       </header>
 
       <!-- Row 1: Upload, Undo Dot, Accept Slice, Clear Images -->
@@ -739,16 +739,8 @@
           <input type="file" id="fileInput" accept="image/*,.png,.jpg,.jpeg,.webp,.gif,.svg" multiple />
         </label>
 
-        <button type="button" id="btnUndoDot" class="pill-btn btn-blue" title="Remove the last placed dot">
-          <span>↩️ Undo Dot</span>
-        </button>
-
-        <button type="button" id="btnAcceptSlice" class="pill-btn btn-red" title="Cut and store the selected polygon slice">
-          <span>✂️ Accept Slice</span>
-        </button>
-
-        <button type="button" id="btnClearImages" class="pill-btn btn-slate-red" title="Clear all uploaded images and reset table">
-          <span>🗑️ Clear Images</span>
+        <button type="button" id="btnClearImages" class="pill-btn btn-slate-red" title="Remove only the selected image; stored parts remain">
+          <span>🗑️ Clear Current Image</span>
         </button>
       </div>
 
@@ -795,8 +787,8 @@
       <!-- Multi-Image Switcher (Hidden when blank) -->
       <div class="thumb-bar-wrap" id="thumbBarWrap">
         <div class="thumb-strip" id="thumbStrip"></div>
-        <button type="button" id="btnClearAllThumb" class="mini-btn mini-btn-danger" title="Remove all uploaded images">
-          🗑️ Clear All
+        <button type="button" id="btnClearAllThumb" class="mini-btn mini-btn-danger" title="Remove all uploaded images; stored parts remain">
+          🗑️ Clear All Images
         </button>
       </div>
 
@@ -823,6 +815,16 @@
           <option value="medium">Medium (8 px)</option>
           <option value="normal" selected>Normal (12 px)</option>
         </select>
+      </div>
+      <div class="pill-row" style="margin:8px 0">
+        <button type="button" id="btnUndoDot" class="pill-btn btn-blue" title="Remove the last placed dot">
+          <span>↩️ Undo Dot</span>
+        </button>
+
+        <button type="button" id="btnAcceptSlice" class="pill-btn btn-red" title="Cut and store the selected polygon slice">
+          <span>✂️ Accept Slice</span>
+        </button>
+
       </div>
       <!-- Slicing Table Viewport (100% Blank Dropzone by Default) -->
       <div class="table-viewport" id="tableViewport">
@@ -1131,7 +1133,7 @@
       showToast('Cleared all uploaded images');
     }
 
-    el.btnClearImages.addEventListener('click', clearAllImages);
+    el.btnClearImages.addEventListener('click', () => { if (getActiveImage()) removeImageAt(state.activeIdx); });
     el.btnClearAllThumb.addEventListener('click', clearAllImages);
 
     /* =====================================================================
@@ -1252,6 +1254,23 @@
       return imageData;
     }
 
+    // Rebuild remaining pixels from the original and all accepted polygons.
+    function remainingImage(item) {
+      const canvas = document.createElement('canvas');
+      canvas.width = item.width;
+      canvas.height = item.height;
+      const g = canvas.getContext('2d');
+      g.drawImage(item.img,0,0,item.width,item.height);
+      g.globalCompositeOperation = 'destination-out';
+      state.parts.filter(p => p.sourceId === item.id).forEach(p => {
+        g.beginPath();
+        p.polygon.forEach((v,i) => i ? g.lineTo(v.x,v.y) : g.moveTo(v.x,v.y));
+        g.closePath();
+        g.fill();
+      });
+      return canvas;
+    }
+
     function acceptCurrentSlice() {
       const item = getActiveImage();
       if (!item) {
@@ -1297,7 +1316,7 @@
       });
       offCtx.closePath();
       offCtx.clip();
-      offCtx.drawImage(item.img, -minX, -minY, item.width, item.height);
+      offCtx.drawImage(remainingImage(item), -minX, -minY, item.width, item.height);
       offCtx.restore();
 
       if (state.stripWhiteBg) {
@@ -1697,7 +1716,7 @@ ${slicedXml}
       ctx.scale(dpr, dpr);
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, board.w, board.h);
-      ctx.drawImage(item.img, board.x, board.y, dispW, dispH);
+      ctx.drawImage(remainingImage(item), board.x, board.y, dispW, dispH);
 
       // Draw polygon cut path & dots
       if (item.dots.length > 0) {
@@ -1785,6 +1804,7 @@ ${slicedXml}
         delBtn.title = 'Delete part';
         delBtn.addEventListener('click', () => {
           state.parts.splice(idx, 1);
+          renderCanvas();
           renderPartsTray();
           showToast(`Deleted ${part.filename}`);
         });
@@ -1802,6 +1822,7 @@ ${slicedXml}
 
     el.btnClearParts.addEventListener('click', () => {
       state.parts = [];
+      renderCanvas();
       renderPartsTray();
       showToast('Cleared all sliced parts');
     });
