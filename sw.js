@@ -1,4 +1,4 @@
-const CACHE_NAME = 'slicer-v2';
+const CACHE_NAME = 'slicer-v3';
 const ASSETS = [
   './',
   './index.html',
