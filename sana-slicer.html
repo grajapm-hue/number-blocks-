@@ -729,7 +729,7 @@
     <section class="card">
       <header class="app-header">
         <h1 class="app-title">🤖 SaNa Slicer Pro++ (Unified SVG &amp; Assembly)</h1>
-        <small style="display:block;text-align:center;color:#64748b">Slicer v9 · Progressive Cutting</small>
+        <small style="display:block;text-align:center;color:#64748b">Slicer v10 · AI Game Integration</small>
       </header>
 
       <!-- Row 1: Upload, Undo Dot, Accept Slice, Clear Images -->
@@ -769,7 +769,7 @@
         </button>
 
         <button type="button" id="btnSaveOneFolder" class="pill-btn btn-indigo" title="Download one ZIP ready for SaNa Toddlers integration">
-          <span>📦 ChatGPT (SVG + JSON)</span>
+          <span>📦 AI Game Integration ZIP</span>
         </button>
       </div>
 
@@ -1617,16 +1617,21 @@ ${slicedXml}
       const first = state.parts[0];
       manifest.canvas = { sourceImage: first.sourceName, width: first.sourceW, height: first.sourceH };
       manifest.targetGame = 'SaNa Toddlers / Kids Assemble Exploring';
-      manifest.schemaVersion = 1;
+      manifest.schemaVersion = 2;
+      manifest.coordinateSystem = {origin:'top-left',units:'source-image pixels',xDirection:'right',yDirection:'down'};
+      manifest.assembledReference = 'assembled.svg';
+      manifest.parts = manifest.parts.map(p => { const {svgContentBounds,...rest}=p; return {...rest,filename:p.id+'.png',nativePng:p.id+'.png',zIndex:p.order-1}; });
+      const assembledSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="'+first.sourceW+'" height="'+first.sourceH+'" viewBox="0 0 '+first.sourceW+' '+first.sourceH+'">'+state.parts.map(p=>'<image href="'+p.pngDataUrl+'" x="'+p.x+'" y="'+p.y+'" width="'+p.width+'" height="'+p.height+'"/>').join('')+'</svg>';
       const bundleFiles = [
-        { name: 'combined-sliced-and-assembly.svg', content: buildCombinedSvgString() },
-        { name: 'assembly-manifest.json', content: JSON.stringify(manifest, null, 2) },
-        { name: 'README.txt', content: 'SaNa Toddlers Kids Assemble Exploring. Use assembly-manifest.json for original canvas and part positions. Each SVG embeds its native transparent PNG. For exact assembly, extract the embedded PNG or crop the SVG viewBox to svgContentBounds and render at dimensions.width and dimensions.height, positioned at assemblyPosition. Do not stretch the padded 256px tile directly into the original crop. Preserve transparency and verify assembly before deployment.' },
-        ...state.parts.map(p => ({name:p.filename,content:p.svgContent}))
+        {name:'assembled.svg',content:assembledSvg},
+        {name:'assembly-manifest.json',content:JSON.stringify(manifest,null,2)},
+        {name:'README.txt',content:'AI GAME INTEGRATION PACKAGE - SaNa Toddlers / Kids Assemble Exploring. Use native transparent PNGs as movable pieces. Read assembly-manifest.json: filename identifies the asset, assemblyPosition is its top-left target, dimensions are native size, zIndex is drawing order. Scale positions and dimensions uniformly using original canvas width and height in portrait and landscape. No 256px padding. assembled.svg is a self-contained reference of accepted parts only. Verify completeness, PNG dimensions, references, drag/drop and snapping. Preserve existing games. Ask user for age group and game slot; do not deploy without approval.'},
+        ...state.parts.map(p=>({name:p.id+'.png',content:Uint8Array.from(atob(p.pngDataUrl.split(',')[1]),ch=>ch.charCodeAt(0))}))
       ];
+      if(new Set(bundleFiles.map(f=>f.name)).size!==bundleFiles.length || manifest.parts.some(p=>!bundleFiles.some(f=>f.name===p.filename))) {showToast('Invalid assembly package');return;}
       const zipBlob = createOfflineZipBlob(bundleFiles);
       triggerBlobDownload(zipBlob, 'sana-kids-assemble-bundle.zip');
-      showToast('ChatGPT integration ZIP downloaded');
+      showToast('AI game integration ZIP downloaded');
     });
 
     /* =====================================================================
